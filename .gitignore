@@ -18,6 +18,8 @@ yarn.lock
 # macOS
 .DS_Store
 *.pem
+.CFUserTextEncoding
+.bash_history
 
 # Local env files
 .env
@@ -32,6 +34,20 @@ yarn-debug.log*
 yarn-error.log*
 .vscode/
 .idea/
+
+# VS Code / Editor
+*.code-workspace
+.history/
+*.log
+.roaming/
+default_store.properties
+progress_v1
+color_preferences_v2.dat
+element_preferences.dat
+resources-info.local
+studio3t.connections.v100.list
+.lock
+eas.json
 
 # TypeScript
 *.tsbuildinfo
