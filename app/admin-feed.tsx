@@ -42,10 +42,30 @@ export default function AdminFeed() {
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostDescription, setNewPostDescription] = useState('');
   const [newPostLink, setNewPostLink] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    checkAdminAccess();
     loadPosts();
   }, []);
+
+  const checkAdminAccess = async () => {
+    try {
+      const tutorData = await secureRetrieve('tutor_profile');
+      if (!tutorData || !tutorData.isAdmin) {
+        Alert.alert(
+          'Acesso Negado',
+          'Apenas administradores podem acessar esta área.',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+        return;
+      }
+      setIsAdmin(true);
+    } catch (error) {
+      Alert.alert('Erro', 'Erro ao verificar permissões');
+      router.back();
+    }
+  };
 
   const loadPosts = async () => {
     try {
@@ -153,6 +173,11 @@ export default function AdminFeed() {
         return '📝';
     }
   };
+
+  // Não renderizar nada até verificar se é admin
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
     <KeyboardAvoidingView

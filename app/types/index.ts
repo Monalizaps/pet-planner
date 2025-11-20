@@ -4,6 +4,7 @@ export interface Tutor {
   email?: string;
   phone?: string;
   imageUri?: string;
+  isAdmin?: boolean;
   createdAt: Date;
 }
 

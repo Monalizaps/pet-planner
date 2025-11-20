@@ -17,6 +17,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Pet, Tutor } from './types';
 import { savePet } from './services/storage';
+import { secureRetrieve } from './services/security';
 import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -59,11 +60,10 @@ export default function AddPet() {
     }
 
     // Carregar tutor atual
-    const tutorData = await AsyncStorage.getItem('tutor_profile');
+    const tutorData = await secureRetrieve('tutor_profile');
     let tutorId = '1'; // ID padrão
     if (tutorData) {
-      const tutor: Tutor = JSON.parse(tutorData);
-      tutorId = tutor.id;
+      tutorId = tutorData.id;
     }
 
     const newPet: Pet = {

@@ -90,6 +90,7 @@ export default function ProfileScreen() {
         email: email.trim() ? sanitizeString(email.trim()) : undefined,
         phone: phone.trim() ? sanitizeString(phone.trim()) : undefined,
         imageUri,
+        isAdmin: tutor?.isAdmin || false,
         createdAt: tutor?.createdAt || new Date(),
       };
 
@@ -224,6 +225,22 @@ export default function ProfileScreen() {
             />
           </View>
 
+          {/* Checkbox Admin - apenas no primeiro cadastro ou edição */}
+          {isEditing && (
+            <TouchableOpacity
+              style={styles.adminCheckbox}
+              onPress={() => {
+                const newTutor = tutor ? { ...tutor, isAdmin: !tutor.isAdmin } : null;
+                if (newTutor) setTutor(newTutor);
+              }}
+            >
+              <View style={[styles.checkbox, tutor?.isAdmin && styles.checkboxChecked]}>
+                {tutor?.isAdmin && <Ionicons name="checkmark" size={16} color="#fff" />}
+              </View>
+              <Text style={styles.checkboxLabel}>Sou administrador (acesso ao gerenciamento do feed)</Text>
+            </TouchableOpacity>
+          )}
+
           {isEditing && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
@@ -245,14 +262,16 @@ export default function ProfileScreen() {
           {/* Botão de excluir perfil */}
           {tutor && !isEditing && (
             <>
-              {/* Botão Admin */}
-              <TouchableOpacity
-                style={styles.adminButton}
-                onPress={() => router.push('/admin-feed')}
-              >
-                <Ionicons name="settings-outline" size={20} color="#6C63FF" />
-                <Text style={styles.adminButtonText}>Gerenciar Feed (Admin)</Text>
-              </TouchableOpacity>
+              {/* Botão Admin - apenas para admins */}
+              {tutor.isAdmin && (
+                <TouchableOpacity
+                  style={styles.adminButton}
+                  onPress={() => router.push('/admin-feed')}
+                >
+                  <Ionicons name="settings-outline" size={20} color="#6C63FF" />
+                  <Text style={styles.adminButtonText}>Gerenciar Feed (Admin)</Text>
+                </TouchableOpacity>
+              )}
 
               <View style={styles.dangerZone}>
                 <Text style={styles.dangerZoneTitle}>Zona de Perigo</Text>
@@ -469,6 +488,32 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
     lineHeight: 20,
+  },
+  adminCheckbox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 20,
+    padding: 12,
+    backgroundColor: '#F8F9FD',
+    borderRadius: 8,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#6C63FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#6C63FF',
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontSize: 14,
+    color: '#666',
   },
   adminButton: {
     backgroundColor: '#E8E6FF',
