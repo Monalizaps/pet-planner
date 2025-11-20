@@ -83,18 +83,14 @@ export default function AddTask() {
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
+    setShowDatePicker(false);
     if (selectedDate) {
       setDate(selectedDate);
     }
   };
 
   const onTimeChange = (event: any, selectedTime?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowTimePicker(false);
-    }
+    setShowTimePicker(false);
     if (selectedTime) {
       setTime(selectedTime);
     }

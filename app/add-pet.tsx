@@ -85,7 +85,7 @@ export default function AddPet() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(false);
     if (selectedDate) {
       setBirthDate(selectedDate);
     }
