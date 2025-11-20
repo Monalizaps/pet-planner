@@ -39,9 +39,9 @@ export const encryptData = async (data: any): Promise<string> => {
       `${payloadString}${key}`
     );
     
-    // Encode em base64 para armazenamento
+    // Encode em base64 para armazenamento (usando btoa nativo)
     const combined = JSON.stringify({ payload: payloadString, integrity });
-    return Buffer.from(combined).toString('base64');
+    return btoa(encodeURIComponent(combined));
   } catch (error) {
     console.error('Encryption error:', error);
     throw new Error('Failed to encrypt data');
@@ -51,8 +51,8 @@ export const encryptData = async (data: any): Promise<string> => {
 // Descriptografar dados
 export const decryptData = async (encryptedData: string): Promise<any> => {
   try {
-    // Decode base64
-    const combined = JSON.parse(Buffer.from(encryptedData, 'base64').toString());
+    // Decode base64 (usando atob nativo)
+    const combined = JSON.parse(decodeURIComponent(atob(encryptedData)));
     const { payload: payloadString, integrity: storedIntegrity } = combined;
     
     const key = await getEncryptionKey();

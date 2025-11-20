@@ -45,9 +45,13 @@ export default function ProfileScreen() {
         setEmail(tutorData.email ? sanitizeString(tutorData.email) : '');
         setPhone(tutorData.phone ? sanitizeString(tutorData.phone) : '');
         setImageUri(tutorData.imageUri);
+      } else {
+        // Se não tem perfil, ativar modo de edição automaticamente
+        setIsEditing(true);
       }
     } catch (error) {
       console.error('Erro ao carregar perfil:', error);
+      setIsEditing(true);
     }
   };
 

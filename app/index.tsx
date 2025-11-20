@@ -59,55 +59,24 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'pets' | 'today' | 'upcoming'>('pets');
   const [tutor, setTutor] = useState<Tutor | null>(null);
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
-  const [tempName, setTempName] = useState('');
 
   useEffect(() => {
     loadData();
-    checkFirstAccess();
+    loadTutorProfile();
   }, []);
 
-  const checkFirstAccess = async () => {
+  const loadTutorProfile = async () => {
     try {
       const tutorData = await secureRetrieve('tutor_profile');
       if (tutorData && validateTutorData(tutorData)) {
         setTutor(tutorData);
-      } else {
-        setShowWelcomeModal(true);
       }
     } catch (error) {
-      console.error('Error checking first access:', error);
-      setShowWelcomeModal(true);
+      console.error('Error loading tutor profile:', error);
     }
   };
 
-  const saveTutorName = async () => {
-    if (!tempName.trim()) {
-      Alert.alert('Atenção', 'Por favor, digite seu nome');
-      return;
-    }
-    try {
-      const tutorData: Tutor = {
-        id: '1',
-        name: sanitizeString(tempName.trim()),
-        createdAt: new Date(),
-      };
-      
-      if (!validateTutorData(tutorData)) {
-        Alert.alert('Erro', 'Nome inválido');
-        return;
-      }
-      
-      await secureStore('tutor_profile', tutorData);
-      await AsyncStorage.setItem('tutor_name', sanitizeString(tempName.trim()));
-      setTutor(tutorData);
-      setShowWelcomeModal(false);
-      setTempName('');
-    } catch (error) {
-      console.error('Error saving tutor name:', error);
-      Alert.alert('Erro', 'Não foi possível salvar');
-    }
-  };
+
 
   const loadData = async () => {
     setLoading(true);
@@ -365,12 +334,31 @@ export default function Home() {
               <Text style={styles.greeting}>
                 Olá{tutor?.name ? `, ${tutor.name}` : ''}! 👋
               </Text>
-              <Text style={styles.subtitle}>Cuide bem dos seus pets</Text>
+              {!tutor ? (
+                <TouchableOpacity onPress={() => router.push('/profile')}>
+                  <Text style={styles.createProfileLink}>Criar meu perfil →</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.subtitle}>Cuide bem dos seus pets</Text>
+              )}
             </View>
           </View>
           <TouchableOpacity
             style={styles.addButton}
-            onPress={() => router.push('/add-pet')}
+            onPress={() => {
+              if (!tutor) {
+                Alert.alert(
+                  'Perfil Necessário',
+                  'Crie seu perfil antes de adicionar pets',
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { text: 'Criar Perfil', onPress: () => router.push('/profile') }
+                  ]
+                );
+                return;
+              }
+              router.push('/add-pet');
+            }}
           >
             <Ionicons name="add" size={24} color="#fff" />
             <Text style={styles.addButtonText}>Novo Pet</Text>
@@ -601,44 +589,7 @@ export default function Home() {
         </View>
       </Modal>
 
-      {/* Modal de Boas-vindas */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={showWelcomeModal}
-        onRequestClose={() => {}}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.welcomeModalContainer}>
-            <Text style={styles.welcomeTitle}>Bem-vindo ao Pet Planner! 🐾</Text>
-            <Text style={styles.welcomeSubtitle}>
-              Vamos criar seu perfil para começar
-            </Text>
-            
-            <TextInput
-              style={styles.welcomeInput}
-              placeholder="Seu nome"
-              value={tempName}
-              onChangeText={setTempName}
-              autoFocus
-            />
-            
-            <TouchableOpacity
-              style={styles.welcomeButton}
-              onPress={async () => {
-                if (!tempName.trim()) {
-                  Alert.alert('Atenção', 'Por favor, digite seu nome');
-                  return;
-                }
-                await saveTutorName();
-                router.push('/profile');
-              }}
-            >
-              <Text style={styles.welcomeButtonText}>Criar Perfil</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+
     </View>
   );
 }
@@ -706,6 +657,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#E8E6FF',
+  },
+  createProfileLink: {
+    fontSize: 14,
+    color: '#fff',
+    textDecorationLine: 'underline',
+    marginTop: 4,
   },
   addButton: {
     backgroundColor: 'rgba(255,255,255,0.25)',
@@ -1070,50 +1027,5 @@ const styles = StyleSheet.create({
   socialFeedSubtitle: {
     fontSize: 13,
     color: '#666',
-  },
-  welcomeModalContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 24,
-    padding: 30,
-    margin: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#6C63FF',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  welcomeSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 22,
-  },
-  welcomeInput: {
-    backgroundColor: '#F8F9FD',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#E8E6FF',
-  },
-  welcomeButton: {
-    backgroundColor: '#6C63FF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  welcomeButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
   },
 });
