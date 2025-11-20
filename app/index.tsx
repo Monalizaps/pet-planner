@@ -24,6 +24,7 @@ import {
   validateTutorData,
   sanitizeString,
 } from './services/security';
+import { colors } from './theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -366,14 +367,14 @@ export default function Home() {
             </TouchableOpacity>
             <View style={styles.headerTextContainer}>
               <Text style={styles.greeting}>
-                Olá{tutor?.name ? `, ${tutor.name}` : ''}! 👋
+                🐱 Olá{tutor?.name ? `, ${tutor.name}` : ''}! 👋
               </Text>
               {!tutor ? (
                 <TouchableOpacity onPress={() => router.push('/profile')}>
                   <Text style={styles.createProfileLink}>Criar meu perfil →</Text>
                 </TouchableOpacity>
               ) : (
-                <Text style={styles.subtitle}>Cuide bem dos seus pets</Text>
+                <Text style={styles.subtitle}>MiAuto Lembrete • Cuide dos seus pets</Text>
               )}
             </View>
           </View>
@@ -494,11 +495,11 @@ export default function Home() {
         {/* Meus Pets */}
         {pets.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🐾</Text>
-            <Text style={styles.emptyTitle}>Bem-vindo ao Pet Planner!</Text>
+            <Text style={styles.emptyIcon}>🐱</Text>
+            <Text style={styles.emptyTitle}>Bem-vindo ao MiAuto Lembrete!</Text>
             <Text style={styles.emptyText}>
               Comece adicionando seu primeiro pet{'\n'}
-              e organize os cuidados dele
+              e organize os cuidados dele com o Luigi 🐾
             </Text>
             <TouchableOpacity
               style={styles.emptyButton}
@@ -668,16 +669,16 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: colors.secondary,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     paddingTop: 60,
     paddingBottom: 30,
     paddingHorizontal: 20,
-    shadowColor: '#6C63FF',
+    shadowColor: colors.secondary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -704,17 +705,17 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: colors.card,
   },
   profilePlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#E8E6FF',
+    borderColor: colors.primary,
   },
   headerTextContainer: {
     flex: 1,
@@ -722,21 +723,21 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
-    color: '#E8E6FF',
+    color: colors.textLight,
   },
   createProfileLink: {
     fontSize: 14,
-    color: '#fff',
+    color: colors.text,
     textDecorationLine: 'underline',
     marginTop: 4,
   },
   addButton: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -744,15 +745,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     borderRadius: 25,
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    shadowColor: '#000',
+    borderColor: colors.card,
+    shadowColor: colors.shadowMedium,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
   },
   addButtonText: {
-    color: '#fff',
+    color: colors.text,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -768,19 +769,21 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.surface,
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   statNumber: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#6C63FF',
+    color: colors.primary,
   },
   statLabel: {
     fontSize: 12,
-    color: '#6C63FF',
+    color: colors.text,
     marginTop: 4,
     fontWeight: '600',
   },
@@ -789,56 +792,60 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   calendarCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: colors.shadowLight,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#2D3436',
+    color: colors.text,
     marginBottom: 16,
   },
   tasksForDayCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 24,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: colors.shadowLight,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.gray200,
   },
   taskItem: {
-    backgroundColor: '#F8F9FD',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderLeftWidth: 4,
-    borderLeftColor: '#6C63FF',
+    borderLeftColor: colors.primary,
   },
   taskPet: {
     fontSize: 14,
-    color: '#6C63FF',
+    color: colors.primary,
     fontWeight: '600',
     marginBottom: 4,
   },
   taskTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#2D3436',
+    color: colors.text,
     marginBottom: 4,
   },
   taskTime: {
     fontSize: 12,
-    color: '#636E72',
+    color: colors.textLight,
   },
   petsSection: {
     marginBottom: 20,
@@ -847,32 +854,38 @@ const styles = StyleSheet.create({
     paddingRight: 20,
   },
   petCard: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 20,
     padding: 16,
     marginRight: 12,
     alignItems: 'center',
     width: 120,
-    shadowColor: '#000',
+    shadowColor: colors.shadowLight,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.15,
     shadowRadius: 10,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.primary,
   },
   petCardImage: {
     width: 70,
     height: 70,
     borderRadius: 35,
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   petCardImagePlaceholder: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   petCardIcon: {
     fontSize: 36,
@@ -880,7 +893,7 @@ const styles = StyleSheet.create({
   petCardName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#2D3436',
+    color: colors.text,
     textAlign: 'center',
   },
   emptyState: {
@@ -888,6 +901,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 80,
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    marginHorizontal: 20,
   },
   emptyIcon: {
     fontSize: 80,
@@ -896,13 +912,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#2D3436',
+    color: colors.text,
     marginBottom: 12,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
-    color: '#636E72',
+    color: colors.textLight,
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 24,
@@ -910,21 +926,21 @@ const styles = StyleSheet.create({
   emptyButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 30,
     gap: 8,
-    shadowColor: '#6C63FF',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 5,
   },
   emptyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6C63FF',
+    color: colors.text,
   },
   dayContainer: {
     width: 32,
@@ -934,19 +950,19 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   selectedDay: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: colors.primary,
   },
   dayText: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#2d4150',
+    color: colors.text,
   },
   todayText: {
-    color: '#6C63FF',
+    color: colors.primary,
     fontWeight: 'bold',
   },
   selectedDayText: {
-    color: '#ffffff',
+    color: colors.text,
     fontWeight: 'bold',
   },
   disabledDay: {
@@ -963,7 +979,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -982,12 +998,12 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     marginBottom: 20,
   },
   modalEmptyText: {
     fontSize: 16,
-    color: '#999',
+    color: colors.textLight,
     textAlign: 'center',
     marginTop: 20,
     marginBottom: 20,
@@ -995,25 +1011,31 @@ const styles = StyleSheet.create({
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: colors.surface,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
   },
   modalPetImage: {
     width: 50,
     height: 50,
     borderRadius: 25,
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   modalPetPlaceholder: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   modalPetPlaceholderText: {
     fontSize: 24,
@@ -1024,29 +1046,31 @@ const styles = StyleSheet.create({
   modalItemTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: colors.text,
     marginBottom: 4,
   },
   modalItemSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textLight,
   },
   modalTaskIcon: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   modalTaskIconText: {
     fontSize: 20,
-    color: '#6C63FF',
+    color: colors.primary,
     fontWeight: 'bold',
   },
   modalDateBadge: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: colors.secondary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -1055,23 +1079,25 @@ const styles = StyleSheet.create({
   modalDateText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
   },
   completedTask: {
     textDecorationLine: 'line-through',
     color: '#999',
   },
   feedSection: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderRadius: 16,
     padding: 18,
     marginTop: 20,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: colors.shadowLight,
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: colors.tertiary,
   },
   feedHeader: {
     flexDirection: 'row',
@@ -1083,13 +1109,13 @@ const styles = StyleSheet.create({
     marginHorizontal: -8,
   },
   feedPostCard: {
-    backgroundColor: '#F8F9FD',
+    backgroundColor: colors.surface,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 8,
     width: width * 0.7,
     borderLeftWidth: 3,
-    borderLeftColor: '#6C63FF',
+    borderLeftColor: colors.tertiary,
   },
   feedPostHeader: {
     flexDirection: 'row',
@@ -1103,19 +1129,19 @@ const styles = StyleSheet.create({
   feedPlatformText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#6C63FF',
+    color: colors.tertiary,
     textTransform: 'uppercase',
   },
   feedPostTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     marginBottom: 8,
     lineHeight: 22,
   },
   feedPostDescription: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textLight,
     lineHeight: 20,
     marginBottom: 12,
   },
@@ -1127,7 +1153,7 @@ const styles = StyleSheet.create({
   },
   feedPostLink: {
     fontSize: 13,
-    color: '#6C63FF',
+    color: colors.tertiary,
     fontWeight: '600',
   },
   socialFeedIcon: {
