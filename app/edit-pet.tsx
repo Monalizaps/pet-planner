@@ -17,6 +17,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { Pet } from './types';
 import { getPets, savePet } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from './theme/colors';
 
 export default function EditPet() {
   const router = useRouter();
