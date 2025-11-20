@@ -9,6 +9,7 @@ import {
   Image,
   ScrollView,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';

@@ -10,6 +10,8 @@ import {
   TextInput,
   Alert,
   RefreshControl,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -32,7 +34,7 @@ interface SocialPost {
   createdAt: Date;
 }
 
-export default function Feed() {
+export default function AdminFeed() {
   const router = useRouter();
   const [posts, setPosts] = useState<SocialPost[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -153,12 +155,16 @@ export default function Feed() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Feed Social</Text>
+        <Text style={styles.headerTitle}>Admin - Gerenciar Feed</Text>
         <TouchableOpacity onPress={() => setShowAddPost(!showAddPost)}>
           <Ionicons name={showAddPost ? "close" : "add"} size={28} color="#fff" />
         </TouchableOpacity>
@@ -167,6 +173,7 @@ export default function Feed() {
       <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -278,7 +285,7 @@ export default function Feed() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

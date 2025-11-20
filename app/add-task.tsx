@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   Alert,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -107,7 +108,11 @@ export default function AddTask() {
   ] as const;
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -116,7 +121,7 @@ export default function AddTask() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
@@ -215,7 +220,7 @@ export default function AddTask() {
           <Text style={styles.saveButtonText}>Salvar Tarefa</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

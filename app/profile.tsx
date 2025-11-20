@@ -9,6 +9,8 @@ import {
   ScrollView,
   Alert,
   Modal,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -136,7 +138,11 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -157,7 +163,7 @@ export default function ProfileScreen() {
         {!tutor && <View style={{ width: 40 }} />}
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Foto do perfil */}
         <View style={styles.imageSection}>
           <TouchableOpacity
@@ -238,21 +244,32 @@ export default function ProfileScreen() {
 
           {/* Botão de excluir perfil */}
           {tutor && !isEditing && (
-            <View style={styles.dangerZone}>
-              <Text style={styles.dangerZoneTitle}>Zona de Perigo</Text>
-              <Text style={styles.dangerZoneSubtitle}>
-                Esta ação é irreversível e apagará todos os seus dados
-              </Text>
+            <>
+              {/* Botão Admin */}
               <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={confirmDeleteProfile}
+                style={styles.adminButton}
+                onPress={() => router.push('/admin-feed')}
               >
-                <Ionicons name="trash-outline" size={20} color="#fff" />
-                <Text style={styles.deleteButtonText}>
-                  Excluir Perfil e Todos os Dados
-                </Text>
+                <Ionicons name="settings-outline" size={20} color="#6C63FF" />
+                <Text style={styles.adminButtonText}>Gerenciar Feed (Admin)</Text>
               </TouchableOpacity>
-            </View>
+
+              <View style={styles.dangerZone}>
+                <Text style={styles.dangerZoneTitle}>Zona de Perigo</Text>
+                <Text style={styles.dangerZoneSubtitle}>
+                  Esta ação é irreversível e apagará todos os seus dados
+                </Text>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={confirmDeleteProfile}
+                >
+                  <Ionicons name="trash-outline" size={20} color="#fff" />
+                  <Text style={styles.deleteButtonText}>
+                    Excluir Perfil e Todos os Dados
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </>
           )}
         </View>
       </ScrollView>
@@ -298,7 +315,7 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -452,6 +469,23 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 16,
     lineHeight: 20,
+  },
+  adminButton: {
+    backgroundColor: '#E8E6FF',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#6C63FF',
+  },
+  adminButtonText: {
+    color: '#6C63FF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   deleteButton: {
     backgroundColor: '#FF6B6B',

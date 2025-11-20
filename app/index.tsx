@@ -10,6 +10,7 @@ import {
   Dimensions,
   Modal,
   TextInput,
+  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +26,17 @@ import {
 } from './services/security';
 
 const { width } = Dimensions.get('window');
+
+interface SocialPost {
+  id: string;
+  platform: 'tiktok' | 'instagram' | 'custom';
+  title: string;
+  description: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  link?: string;
+  createdAt: Date;
+}
 
 // Configurar calendário em português
 LocaleConfig.locales['pt-br'] = {
@@ -59,10 +71,12 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<'pets' | 'today' | 'upcoming'>('pets');
   const [tutor, setTutor] = useState<Tutor | null>(null);
+  const [socialPosts, setSocialPosts] = useState<SocialPost[]>([]);
 
   useEffect(() => {
     loadData();
     loadTutorProfile();
+    loadSocialPosts();
   }, []);
 
   const loadTutorProfile = async () => {
@@ -76,7 +90,27 @@ export default function Home() {
     }
   };
 
-
+  const loadSocialPosts = async () => {
+    try {
+      const storedPosts = await secureRetrieve('social_posts');
+      if (storedPosts && Array.isArray(storedPosts)) {
+        const validPosts = storedPosts.filter((post: any) => {
+          return post.id && post.title && post.platform;
+        }).map((post: any) => ({
+          ...post,
+          title: sanitizeString(post.title),
+          description: post.description ? sanitizeString(post.description) : '',
+          link: post.link ? sanitizeString(post.link) : undefined,
+          createdAt: new Date(post.createdAt),
+        }));
+        setSocialPosts(validPosts.sort((a: SocialPost, b: SocialPost) => 
+          b.createdAt.getTime() - a.createdAt.getTime()
+        ));
+      }
+    } catch (error) {
+      console.error('Error loading posts:', error);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -404,21 +438,58 @@ export default function Home() {
         )}
 
         {/* Feed Social */}
-        <TouchableOpacity 
-          style={styles.socialFeedCard}
-          onPress={() => router.push('/feed')}
-        >
-          <View style={styles.socialFeedHeader}>
-            <View style={styles.socialFeedLeft}>
+        {socialPosts.length > 0 && (
+          <View style={styles.feedSection}>
+            <View style={styles.feedHeader}>
               <Text style={styles.socialFeedIcon}>📱</Text>
-              <View>
-                <Text style={styles.socialFeedTitle}>Feed Social</Text>
-                <Text style={styles.socialFeedSubtitle}>Curiosidades e dicas sobre pets</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.socialFeedTitle}>Dicas e Curiosidades</Text>
+                <Text style={styles.socialFeedSubtitle}>Conteúdo selecionado para você</Text>
               </View>
             </View>
-            <Ionicons name="chevron-forward" size={24} color="#6C63FF" />
+            
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.feedScroll}
+            >
+              {socialPosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={styles.feedPostCard}
+                  onPress={() => post.link && Linking.openURL(post.link)}
+                  activeOpacity={post.link ? 0.7 : 1}
+                >
+                  <View style={styles.feedPostHeader}>
+                    <Text style={styles.feedPlatformIcon}>
+                      {post.platform === 'tiktok' ? '🎵' : post.platform === 'instagram' ? '📸' : '✨'}
+                    </Text>
+                    <Text style={styles.feedPlatformText}>
+                      {post.platform === 'tiktok' ? 'TikTok' : post.platform === 'instagram' ? 'Instagram' : 'Destaque'}
+                    </Text>
+                  </View>
+                  
+                  <Text style={styles.feedPostTitle} numberOfLines={2}>
+                    {post.title}
+                  </Text>
+                  
+                  {post.description && (
+                    <Text style={styles.feedPostDescription} numberOfLines={3}>
+                      {post.description}
+                    </Text>
+                  )}
+                  
+                  {post.link && (
+                    <View style={styles.feedPostFooter}>
+                      <Ionicons name="link" size={14} color="#6C63FF" />
+                      <Text style={styles.feedPostLink}>Ver mais</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-        </TouchableOpacity>
+        )}
 
         {/* Meus Pets */}
         {pets.length === 0 ? (
@@ -990,7 +1061,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
     color: '#999',
   },
-  socialFeedCard: {
+  feedSection: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 18,
@@ -1001,19 +1072,63 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
-    borderLeftWidth: 4,
-    borderLeftColor: '#6C63FF',
   },
-  socialFeedHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  socialFeedLeft: {
+  feedHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    flex: 1,
+    marginBottom: 16,
+  },
+  feedScroll: {
+    marginHorizontal: -8,
+  },
+  feedPostCard: {
+    backgroundColor: '#F8F9FD',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 8,
+    width: width * 0.7,
+    borderLeftWidth: 3,
+    borderLeftColor: '#6C63FF',
+  },
+  feedPostHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  feedPlatformIcon: {
+    fontSize: 20,
+  },
+  feedPlatformText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6C63FF',
+    textTransform: 'uppercase',
+  },
+  feedPostTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  feedPostDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  feedPostFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 4,
+  },
+  feedPostLink: {
+    fontSize: 13,
+    color: '#6C63FF',
+    fontWeight: '600',
   },
   socialFeedIcon: {
     fontSize: 32,
