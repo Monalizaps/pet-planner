@@ -225,22 +225,6 @@ export default function ProfileScreen() {
             />
           </View>
 
-          {/* Checkbox Admin - apenas no primeiro cadastro ou edição */}
-          {isEditing && (
-            <TouchableOpacity
-              style={styles.adminCheckbox}
-              onPress={() => {
-                const newTutor = tutor ? { ...tutor, isAdmin: !tutor.isAdmin } : null;
-                if (newTutor) setTutor(newTutor);
-              }}
-            >
-              <View style={[styles.checkbox, tutor?.isAdmin && styles.checkboxChecked]}>
-                {tutor?.isAdmin && <Ionicons name="checkmark" size={16} color="#fff" />}
-              </View>
-              <Text style={styles.checkboxLabel}>Sou administrador (acesso ao gerenciamento do feed)</Text>
-            </TouchableOpacity>
-          )}
-
           {isEditing && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
