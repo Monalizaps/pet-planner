@@ -24,6 +24,7 @@ import {
   sanitizeString,
   checkRateLimit,
 } from './services/security';
+import { colors } from './theme/colors';
 
 export default function ProfileScreen() {
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -325,35 +326,42 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: colors.secondary,
     paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    shadowColor: colors.shadowLight,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#fff',
+    color: colors.text,
   },
   editButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -363,9 +371,9 @@ const styles = StyleSheet.create({
   imageSection: {
     alignItems: 'center',
     paddingVertical: 30,
-    backgroundColor: '#fff',
+    backgroundColor: colors.card,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8E6FF',
+    borderBottomColor: colors.gray200,
   },
   imageContainer: {
     position: 'relative',
@@ -375,17 +383,17 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 4,
-    borderColor: '#6C63FF',
+    borderColor: colors.primary,
   },
   placeholderImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 4,
-    borderColor: '#6C63FF',
+    borderColor: colors.primary,
   },
   cameraIcon: {
     position: 'absolute',
