@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Pet Planner",
+    "slug": "pet-planner",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.petplanner.app"
+    },
+    "android": {
+      "package": "com.petplanner.app"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "petplanner"
+  }
+}
