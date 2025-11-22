@@ -20,6 +20,7 @@ import { savePet } from './services/storage';
 import { secureRetrieve } from './services/security';
 import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
+import { colors } from './theme/colors';
 
 export default function AddPet() {
   const router = useRouter();

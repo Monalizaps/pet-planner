@@ -1,16 +1,28 @@
 {
   "expo": {
-    "name": "Pet Planner",
-    "slug": "pet-planner",
+    "name": "MiAuto Lembrete",
+    "slug": "miauto-lembrete",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5EFE6"
+    },
+    "primaryColor": "#B8E6D5",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.petplanner.app"
+      "bundleIdentifier": "com.miautolembrete.app",
+      "backgroundColor": "#F5EFE6"
     },
     "android": {
-      "package": "com.petplanner.app"
+      "package": "com.miautolembrete.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5EFE6"
+      }
     },
     "web": {
       "bundler": "metro",

@@ -22,6 +22,7 @@ import {
   sanitizeString,
   checkRateLimit,
 } from './services/security';
+import { colors } from './theme/colors';
 
 interface SocialPost {
   id: string;

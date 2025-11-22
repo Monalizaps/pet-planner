@@ -17,6 +17,7 @@ import { saveTask, getPets } from './services/storage';
 import { scheduleTaskNotification } from './utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
+import { colors } from './theme/colors';
 
 export default function AddTask() {
   const router = useRouter();
