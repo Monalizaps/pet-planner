@@ -120,16 +120,7 @@ export default function PetDetails() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog':
-        return '🐶';
-      case 'cat':
-        return '🐱';
-      case 'bird':
-        return '🦜';
-      default:
-        return '🐾';
-    }
+    return type;
   };
 
   if (!pet) {

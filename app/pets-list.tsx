@@ -7,10 +7,12 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Text } from './components/StyledText';
+import { PetIcon, PawIcon } from './components/PetIcons';
 import { useRouter } from 'expo-router';
 import { Pet } from './types';
 import { getPets } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export default function PetsListScreen() {
   const router = useRouter();
@@ -26,12 +28,7 @@ export default function PetsListScreen() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   const getTypeLabel = (type: string) => {
@@ -69,7 +66,11 @@ export default function PetsListScreen() {
       >
         {pets.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🐾</Text>
+            <Image
+              source={require('../assets/pets1.png')}
+              style={styles.emptyPetImage}
+              resizeMode="contain"
+            />
             <Text style={styles.emptyTitle}>Nenhum pet cadastrado</Text>
             <Text style={styles.emptyText}>
               Adicione seu primeiro pet para começar
@@ -121,21 +122,21 @@ export default function PetsListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: '#FAF7FF',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     paddingTop: 60,
     paddingBottom: 16,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E8ECF4',
-    shadowColor: '#000',
+    borderBottomColor: '#E0D4F7',
+    shadowColor: '#B8A4E8',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 2,
   },
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontFamily: 'Quicksand_700Bold',
-    color: '#2D3748',
+    color: '#5A4E7A',
     flex: 1,
     textAlign: 'center',
   },
@@ -158,31 +159,37 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100,
+    paddingTop: 80,
     paddingHorizontal: 40,
   },
-  emptyIcon: {
-    fontSize: 80,
+  emptyPetImage: {
+    width: 200,
+    height: 150,
     marginBottom: 20,
   },
   emptyTitle: {
     fontSize: 22,
     fontFamily: 'Quicksand_700Bold',
-    color: '#2D3748',
+    color: '#5A4E7A',
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
     fontFamily: 'Quicksand_400Regular',
-    color: '#718096',
+    color: '#9B8FB8',
     textAlign: 'center',
     marginBottom: 30,
   },
   emptyButton: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#B8A4E8',
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 16,
+    shadowColor: '#B8A4E8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   emptyButtonText: {
     color: '#fff',

@@ -48,12 +48,7 @@ export default function AddTask() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   const handleSave = async () => {
@@ -137,7 +132,10 @@ export default function AddTask() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>✅ Nova Tarefa</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <TaskIcon size={24} color="#fff" />
+          <Text style={styles.title}>Nova Tarefa</Text>
+        </View>
         <View style={{ width: 24 }} />
       </View>
 
@@ -153,7 +151,7 @@ export default function AddTask() {
               ]}
               onPress={() => setSelectedPetId(pet.id)}
             >
-              <Text style={styles.petIcon}>{getPetIcon(pet.type)}</Text>
+              <Text style={styles.petIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
               <Text style={[
                 styles.petName,
                 selectedPetId === pet.id && styles.petNameSelected,

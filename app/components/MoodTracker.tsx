@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Text } from './StyledText';
+import { MoodIcon, PetIcon, PawIcon } from './PetIcons';
 import { Ionicons } from '@expo/vector-icons';
 import { Pet, MoodEntry, MoodType, MoodAnalysis } from '../types';
 import { 
@@ -26,13 +27,13 @@ interface MoodTrackerProps {
   onMoodUpdated?: () => void;
 }
 
-const MOODS: { type: MoodType; emoji: string; label: string; color: string }[] = [
-  { type: 'feliz', emoji: '😊', label: 'Feliz', color: '#FFD93D' },
-  { type: 'calmo', emoji: '😌', label: 'Calmo', color: '#A8D5BA' },
-  { type: 'ansioso', emoji: '😰', label: 'Ansioso', color: '#FFA500' },
-  { type: 'triste', emoji: '😢', label: 'Triste', color: '#B8B8FF' },
-  { type: 'irritado', emoji: '😠', label: 'Irritado', color: '#FF6B6B' },
-  { type: 'energetico', emoji: '⚡', label: 'Energético', color: '#95E1D3' },
+const MOODS: { type: MoodType; label: string; color: string }[] = [
+  { type: 'feliz', label: 'Feliz', color: '#FFD93D' },
+  { type: 'calmo', label: 'Calmo', color: '#A8D5BA' },
+  { type: 'ansioso', label: 'Ansioso', color: '#FFA500' },
+  { type: 'triste', label: 'Triste', color: '#B8B8FF' },
+  { type: 'irritado', label: 'Irritado', color: '#FF6B6B' },
+  { type: 'energetico', label: 'Energético', color: '#95E1D3' },
 ];
 
 export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
@@ -196,14 +197,14 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
       if (count > 0) {
         const percentage = (count / total) * 100;
         const sweepAngle = (count / total) * 360;
-        moodAngles.push({ mood, angle: currentAngle + sweepAngle / 2, percentage });
+        moodAngles.push({ 
+          mood, 
+          angle: currentAngle + sweepAngle / 2, 
+          percentage
+        });
         currentAngle += sweepAngle;
       }
     });
-
-    const radius = 100;
-    const iconRadius = 120;
-    const center = 140;
 
     return (
       <TouchableOpacity 
@@ -212,62 +213,68 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
         activeOpacity={0.9}
       >
         <View style={styles.modernChart}>
-          {/* Círculo de fundo com gradiente simulado */}
-          <View style={styles.circleBackground}>
-            {MOODS.map((mood, index) => {
-              const count = analysis.currentMonth[mood.type];
-              if (count === 0) return null;
-              
-              const startAngle = moodAngles.find(m => m.mood.type === mood.type)?.angle || 0;
-              const percentage = (count / total) * 100;
-              const sweepAngle = (count / total) * 360;
-              
-              return (
-                <View 
-                  key={mood.type} 
-                  style={[
-                    styles.arcSegment,
-                    {
-                      backgroundColor: mood.color,
-                      width: 200,
-                      height: 200,
-                      borderRadius: 100,
-                      position: 'absolute',
-                    }
-                  ]} 
-                />
-              );
-            })}
-          </View>
-
-          {/* Centro branco com score */}
-          <View style={styles.modernChartCenter}>
-            <Text style={styles.modernScoreText}>{averageScore}</Text>
-            <Text style={styles.modernScoreLabel}>your health score</Text>
-          </View>
-
-          {/* Ícones ao redor do círculo */}
-          {moodAngles.map(({ mood, angle }) => {
-            const angleRad = (angle * Math.PI) / 180;
-            const x = center + iconRadius * Math.cos(angleRad);
-            const y = center + iconRadius * Math.sin(angleRad);
+          {/* Círculo com gradiente de cores proporcional */}
+          <View style={styles.circularChart}>
+            {/* Anel externo com cores proporcionais */}
+            <View style={styles.colorRing}>
+              {moodAngles.map(({ mood, percentage }, index) => {
+                // Calcular o tamanho do segmento baseado na porcentagem
+                const widthPercent = percentage;
+                
+                return (
+                  <View
+                    key={mood.type}
+                    style={[
+                      styles.ringSegmentProportional,
+                      {
+                        backgroundColor: mood.color,
+                        width: `${widthPercent}%`,
+                      }
+                    ]}
+                  />
+                );
+              })}
+            </View>
             
-            return (
-              <View
-                key={mood.type}
-                style={[
-                  styles.moodIcon,
-                  {
-                    left: x - 20,
-                    top: y - 20,
-                    backgroundColor: mood.color,
-                  },
-                ]}
-              >
-                <Text style={styles.moodIconEmoji}>{mood.emoji}</Text>
+            {/* Centro branco com score */}
+            <View style={styles.modernChartCenter}>
+              <Text style={styles.modernScoreText}>{averageScore}</Text>
+              <Text style={styles.modernScoreLabel}>pontuação de saúde</Text>
+            </View>
+          </View>
+
+          {/* Legendas com emojis */}
+          <View style={styles.moodLegends}>
+            {moodAngles.map(({ mood, percentage }) => (
+              <View key={mood.type} style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: mood.color }]}>
+                  <Text style={styles.legendEmoji}>
+                    {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
+                  </Text>
+                </View>
+                <Text style={styles.legendText}>
+                  {mood.label} {percentage.toFixed(0)}%
+                </Text>
               </View>
-            );
-          })}
+            ))}
+          </View>
+        </View>
+
+        {/* Informação sobre a pontuação */}
+        <View style={styles.healthScoreInfo}>
+          <View style={styles.infoIcon}>
+            <Ionicons name="information-circle" size={20} color="#B8A4E8" />
+          </View>
+          <View style={styles.infoTextContainer}>
+            <Text style={styles.infoTitle}>Como funciona a pontuação?</Text>
+            <Text style={styles.infoText}>
+              Cada humor tem um valor: Feliz (10), Energético (9), Calmo (8), Ansioso (5), Triste (3) e Irritado (2). 
+              A pontuação é a média dos humores registrados no mês.
+            </Text>
+            <Text style={styles.infoDisclaimer}>
+              ⚠️ Esta pontuação não substitui consultas veterinárias. Variações de humor são normais e dependem da personalidade do seu pet.
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
     );
@@ -308,7 +315,9 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.emoji}>💭</Text>
+          <View style={styles.iconContainer}>
+            <Ionicons name="heart-circle" size={32} color="#FFB5C5" />
+          </View>
           <View>
             <Text style={styles.title}>
               {selectedPet ? `Humor de ${selectedPet.name}` : 'Como está seu pet hoje?'}
@@ -326,9 +335,13 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
       {todayEntry && (
         <View style={styles.todayBadge}>
-          <Text style={styles.todayBadgeText}>
-            Hoje: {MOODS.find(m => m.type === todayEntry.mood)?.emoji} {MOODS.find(m => m.type === todayEntry.mood)?.label}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <Text style={styles.todayBadgeText}>Hoje:</Text>
+            <Text style={styles.todayBadgeText}>
+              {todayEntry.mood === 'feliz' ? '😊' : todayEntry.mood === 'calmo' ? '😌' : todayEntry.mood === 'ansioso' ? '😰' : todayEntry.mood === 'triste' ? '😢' : todayEntry.mood === 'irritado' ? '😠' : '⚡'}
+            </Text>
+            <Text style={styles.todayBadgeText}>{MOODS.find(m => m.type === todayEntry.mood)?.label}</Text>
+          </View>
         </View>
       )}
 
@@ -407,7 +420,9 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                       ]}
                       onPress={() => setSelectedMood(mood.type)}
                     >
-                      <Text style={styles.moodEmoji}>{mood.emoji}</Text>
+                      <Text style={styles.moodEmoji}>
+                        {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
+                      </Text>
                       <Text style={styles.moodLabel}>{mood.label}</Text>
                     </TouchableOpacity>
                   ))}
@@ -520,7 +535,10 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
                     {/* Resumo Mensal */}
                     <View style={styles.summarySection}>
-                      <Text style={styles.summarySectionTitle}>📅 Resumo Mensal</Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        <Ionicons name="calendar" size={20} color="#6C63FF" />
+                        <Text style={styles.summarySectionTitle}>Resumo Mensal</Text>
+                      </View>
                       <View style={styles.moodGrid}>
                         {MOODS.map(mood => {
                           const count = analysis.currentMonth[mood.type];
@@ -531,7 +549,9 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                           return (
                             <View key={mood.type} style={styles.moodGridItem}>
                               <View style={[styles.moodBar, { backgroundColor: mood.color }]}>
-                                <Text style={styles.moodBarEmoji}>{mood.emoji}</Text>
+                                <Text style={styles.moodBarEmoji}>
+                                  {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
+                                </Text>
                               </View>
                               <Text style={styles.moodGridLabel}>{mood.label}</Text>
                               <Text style={styles.moodGridCount}>{count} dias</Text>
@@ -686,6 +706,14 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFB5C5' + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   emoji: {
     fontSize: 32,
   },
@@ -726,6 +754,8 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: 'center',
     gap: 16,
+    marginTop: 20,
+    marginBottom: 16,
   },
   pieChart: {
     width: 140,
@@ -791,21 +821,26 @@ const styles = StyleSheet.create({
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: '#F8F9FD',
     borderRadius: 12,
   },
   legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  legendEmoji: {
+    fontSize: 16,
   },
   legendText: {
-    fontSize: 12,
-    fontFamily: 'Quicksand_500Medium',
-    color: '#333',
+    fontSize: 13,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#5A4E7A',
   },
   modernChart: {
     width: 280,
@@ -814,12 +849,121 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
+  circularChart: {
+    width: 200,
+    height: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  colorRing: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    overflow: 'hidden',
+    position: 'absolute',
+    flexDirection: 'row',
+  },
+  ringSegment: {
+    position: 'absolute',
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 30,
+    borderColor: 'transparent',
+    borderTopColor: 'currentColor',
+  },
+  ringSegmentProportional: {
+    height: '100%',
+  },
+  moodCircleContainer: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    overflow: 'hidden',
+    flexDirection: 'row',
+    position: 'relative',
+  },
+  moodSegmentBar: {
+    flex: 1,
+  },
+  moodLegends: {
+    marginTop: 20,
+    width: '100%',
+    gap: 8,
+  },
+  pieChartContainer: {
+    width: 280,
+    height: 220,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  pieChartCenter: {
+    position: 'absolute',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#FAFBFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    top: 50,
+    left: 80,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
   circleBackground: {
     width: 200,
     height: 200,
     borderRadius: 100,
     position: 'absolute',
     overflow: 'hidden',
+  },
+  donutChart: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    position: 'absolute',
+    overflow: 'hidden',
+  },
+  donutSegment: {
+    position: 'absolute',
+    width: 200,
+    height: 100,
+    top: 0,
+    left: 0,
+    borderTopLeftRadius: 200,
+    borderTopRightRadius: 200,
+    transformOrigin: '50% 100%',
+  },
+  donutSegmentInner: {
+    position: 'absolute',
+    width: 200,
+    height: 100,
+    borderBottomLeftRadius: 200,
+    borderBottomRightRadius: 200,
+    top: 100,
+  },
+  circleRing: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    position: 'absolute',
+    overflow: 'hidden',
+  },
+  coloredCircle: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    position: 'absolute',
+    borderWidth: 30,
+    borderTopColor: '#B8A4E8',
+    borderRightColor: '#FFB5C5',
+    borderBottomColor: '#A8D5E2',
+    borderLeftColor: '#FFB547',
   },
   arcSegment: {
     position: 'absolute',
@@ -865,6 +1009,43 @@ const styles = StyleSheet.create({
   },
   moodIconEmoji: {
     fontSize: 20,
+  },
+  healthScoreInfo: {
+    backgroundColor: '#F0EDFF',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderLeftWidth: 3,
+    borderLeftColor: '#B8A4E8',
+  },
+  infoIcon: {
+    marginRight: 8,
+    marginTop: 2,
+  },
+  infoTextContainer: {
+    flex: 1,
+    gap: 8,
+  },
+  infoTitle: {
+    fontSize: 13,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#5A4E7A',
+    marginBottom: 4,
+  },
+  infoText: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#5A4E7A',
+    lineHeight: 18,
+  },
+  infoDisclaimer: {
+    fontSize: 11,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#8B7AB8',
+    lineHeight: 16,
+    marginTop: 4,
   },
   alertBadge: {
     backgroundColor: '#E8F5E9',

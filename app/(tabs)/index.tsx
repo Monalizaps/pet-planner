@@ -8,12 +8,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { Text } from '../components/StyledText';
+import { PetIcon, MoodIcon, PawIcon, CalendarIcon, BellIcon, TaskIcon } from '../components/PetIcons';
 import { useRouter } from 'expo-router';
 import { Pet, Task, Tutor, MoodEntry, MoodType } from '../types';
 import { getPets, getTasks, getMoodEntries } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { secureRetrieve } from '../services/security';
 import { LinearGradient } from 'expo-linear-gradient';
+import { colors, gradients } from '../theme/colors';
 
 const { width } = Dimensions.get('window');
 
@@ -113,25 +115,8 @@ export default function Home() {
     };
   };
 
-  const getMoodEmoji = (mood: string) => {
-    const emojis: { [key: string]: string } = {
-      feliz: '😊',
-      calmo: '😌',
-      ansioso: '😰',
-      triste: '😢',
-      irritado: '😠',
-      energetico: '⚡',
-    };
-    return emojis[mood] || '🐾';
-  };
-
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   return (
@@ -153,11 +138,16 @@ export default function Home() {
           </TouchableOpacity>
           <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>
-              Olá{tutor?.name ? `, ${tutor.name}` : ''}! 👋
+              Olá{tutor?.name ? `, ${tutor.name}` : ''}!
             </Text>
             <Text style={styles.subtitle}>Resumo dos seus pets</Text>
           </View>
         </View>
+        <Image
+          source={require('../../assets/cat1.png')}
+          style={styles.catDecoration}
+          resizeMode="contain"
+        />
       </View>
 
       <ScrollView 
@@ -168,49 +158,79 @@ export default function Home() {
         {/* Cards de Resumo Rápido */}
         <View style={styles.quickStats}>
           <TouchableOpacity 
-            style={styles.statCard}
+            style={styles.statCardWrapper}
             onPress={() => router.push('/pets-list')}
             activeOpacity={0.7}
           >
-            <Text style={styles.statNumber}>{pets.length}</Text>
-            <Text style={styles.statLabel}>Pets</Text>
-            <Text style={styles.statIcon}>🐾</Text>
+            <LinearGradient
+              colors={['#E0D4F7', '#D4C5F9', '#C5E3F6']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statCard}
+            >
+              <Text style={styles.statNumber}>{pets.length}</Text>
+              <Text style={styles.statLabel}>Pets</Text>
+              <PawIcon size={28} color="#6C63FF" />
+            </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.statCard, { backgroundColor: '#FFE5F1' }]}
+            style={styles.statCardWrapper}
             onPress={() => router.push('/(tabs)/jornada')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.statNumber, { color: '#FF6B9D' }]}>
-              {getTodayTasks().length}
-            </Text>
-            <Text style={[styles.statLabel, { color: '#FF6B9D' }]}>Hoje</Text>
-            <Text style={styles.statIcon}>📅</Text>
+            <LinearGradient
+              colors={['#FFE0F0', '#FFD0E0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statCard}
+            >
+              <Text style={[styles.statNumber, { color: '#5A4E7A' }]}>
+                {getTodayTasks().length}
+              </Text>
+              <Text style={[styles.statLabel, { color: '#5A4E7A' }]}>Hoje</Text>
+              <CalendarIcon size={28} color="#5A4E7A" />
+            </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={[styles.statCard, { backgroundColor: '#FFF4E5' }]}
+            style={styles.statCardWrapper}
             onPress={() => router.push('/(tabs)/jornada')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.statNumber, { color: '#FFB547' }]}>
-              {getUpcomingTasks().length}
-            </Text>
-            <Text style={[styles.statLabel, { color: '#FFB547' }]}>Próximas</Text>
-            <Text style={styles.statIcon}>⏰</Text>
+            <LinearGradient
+              colors={['#FFF4C4', '#FFD4B2']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statCard}
+            >
+              <Text style={[styles.statNumber, { color: '#5A4E7A' }]}>
+                {getUpcomingTasks().length}
+              </Text>
+              <Text style={[styles.statLabel, { color: '#5A4E7A' }]}>Próximas</Text>
+              <BellIcon size={28} color="#5A4E7A" />
+            </LinearGradient>
           </TouchableOpacity>
         </View>
 
         {/* Resumo de Humor dos Pets */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>💭 Bem-estar dos Pets</Text>
+            <View style={styles.sectionTitleContainer}>
+              <View style={styles.sectionIconContainer}>
+                <Ionicons name="heart-circle" size={24} color="#FFB5C5" />
+              </View>
+              <Text style={styles.sectionTitle}>Bem-estar dos Pets</Text>
+            </View>
             <TouchableOpacity onPress={() => router.push('/ranking')}>
               <Text style={styles.seeAllText}>Detalhes →</Text>
             </TouchableOpacity>
           </View>
           {pets.length === 0 ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>🐾</Text>
+              <Image
+                source={require('../../assets/pets1.png')}
+                style={styles.emptyPetImage}
+                resizeMode="contain"
+              />
               <Text style={styles.emptyText}>Adicione seu primeiro pet</Text>
               <TouchableOpacity
                 style={styles.addButton}
@@ -253,7 +273,7 @@ export default function Home() {
                           <Image source={{ uri: pet.imageUri }} style={styles.petAvatar} />
                         ) : (
                           <View style={styles.petAvatarPlaceholder}>
-                            <Text style={styles.petAvatarIcon}>{getPetIcon(pet.type)}</Text>
+                            <Text style={styles.petAvatarIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
                           </View>
                         )}
                         <Text style={styles.petCardName}>{pet.name}</Text>
@@ -263,18 +283,33 @@ export default function Home() {
                         <>
                           {/* Mini gráfico circular */}
                           <View style={styles.miniChartContainer}>
+                            {/* Anel fino com cores dos humores registrados - fundo */}
+                            <View style={styles.miniRingOuter}>
+                              <View style={styles.miniRingInner}>
+                                {Object.entries(summary.distribution)
+                                  .filter(([_, count]) => count > 0)
+                                  .map(([mood, count]) => {
+                                    const percentage = (count / summary.total) * 100;
+                                    return (
+                                      <View
+                                        key={mood}
+                                        style={[
+                                          styles.miniColorSegment,
+                                          {
+                                            backgroundColor: moodColors[mood as MoodType],
+                                            width: `${percentage}%`,
+                                          }
+                                        ]}
+                                      />
+                                    );
+                                  })}
+                              </View>
+                            </View>
+                            {/* Centro branco com pontuação */}
                             <View style={styles.miniChart}>
                               <Text style={styles.miniChartScore}>{summary.score}</Text>
                               <Text style={styles.miniChartLabel}>score</Text>
                             </View>
-                            {/* Arcos coloridos ao redor */}
-                            <View style={[
-                              styles.miniArc,
-                              {
-                                borderColor: moodColors[summary.dominant],
-                                borderWidth: 4,
-                              }
-                            ]} />
                           </View>
 
                           {/* Status */}
@@ -284,7 +319,12 @@ export default function Home() {
                               { backgroundColor: moodColors[summary.dominant] + '20' }
                             ]}>
                               <Text style={styles.moodBadgeEmoji}>
-                                {getMoodEmoji(summary.dominant)}
+                                {summary.dominant === 'feliz' ? '😊' : 
+                                 summary.dominant === 'calmo' ? '😌' : 
+                                 summary.dominant === 'ansioso' ? '😰' : 
+                                 summary.dominant === 'triste' ? '😢' : 
+                                 summary.dominant === 'irritado' ? '😠' : 
+                                 summary.dominant === 'energetico' ? '⚡' : '😊'}
                               </Text>
                               <Text style={[
                                 styles.moodBadgeText,
@@ -320,7 +360,8 @@ export default function Home() {
           </View>
           {getUpcomingTasks().length === 0 ? (
             <View style={styles.emptyTaskCard}>
-              <Text style={styles.emptyTaskText}>✅ Nenhuma tarefa pendente</Text>
+              <TaskIcon size={32} color="#4CAF50" />
+              <Text style={styles.emptyTaskText}>Nenhuma tarefa pendente</Text>
             </View>
           ) : (
             getUpcomingTasks().map(task => {
@@ -341,9 +382,10 @@ export default function Home() {
                     ]} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.taskTitle}>{task.title}</Text>
-                      <Text style={styles.taskPet}>
-                        {pet ? getPetIcon(pet.type) : '🐾'} {pet?.name || 'Pet'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                        <PetIcon type={pet?.type || 'other'} size={14} color="#666" />
+                        <Text style={styles.taskPet}>{pet?.name || 'Pet'}</Text>
+                      </View>
                     </View>
                   </View>
                   <View style={styles.taskRight}>
@@ -367,20 +409,30 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: '#FAF7FF',
   },
   header: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#B8A4E8',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     paddingTop: 60,
     paddingBottom: 30,
     paddingHorizontal: 20,
-    shadowColor: '#6C63FF',
+    shadowColor: '#B8A4E8',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  catDecoration: {
+    position: 'absolute',
+    bottom: width * -0.08,
+    right: width * 0.05,
+    width: width * 0.4,
+    height: width * 0.4,
+    opacity: 0.95,
   },
   headerContent: {
     flexDirection: 'row',
@@ -428,9 +480,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
+  statCardWrapper: {
+    flex: 1,
+  },
   statCard: {
     flex: 1,
-    backgroundColor: '#E8E6FF',
     borderRadius: 20,
     padding: 16,
     alignItems: 'center',
@@ -459,6 +513,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
+  sectionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  sectionIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFB5C5' + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   sectionTitle: {
     fontSize: 18,
     fontFamily: 'Quicksand_700Bold',
@@ -468,6 +535,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Quicksand_600SemiBold',
     color: '#6C63FF',
+  },
+  emptyPetImage: {
+    width: width * 0.5,
+    height: width * 0.375,
+    marginBottom: 20,
   },
   moodCard: {
     backgroundColor: '#fff',
@@ -669,9 +741,9 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   miniChart: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
@@ -680,17 +752,34 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
+    zIndex: 2,
   },
   miniChartScore: {
-    fontSize: 32,
+    fontSize: 28,
     fontFamily: 'Quicksand_700Bold',
     color: '#6C63FF',
   },
   miniChartLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: 'Quicksand_500Medium',
     color: '#999',
     textTransform: 'lowercase',
+  },
+  miniRingOuter: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
+    zIndex: 1,
+  },
+  miniRingInner: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+  },
+  miniColorSegment: {
+    height: '100%',
   },
   miniArc: {
     position: 'absolute',
@@ -698,6 +787,18 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 0,
+  },
+  miniColorRing: {
+    position: 'absolute',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    overflow: 'hidden',
+  },
+  miniRingSegment: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
   },
   moodStatus: {
     alignItems: 'center',

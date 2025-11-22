@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  Text,
   TextInput,
   TouchableOpacity,
   StyleSheet,
@@ -10,6 +9,8 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from 'react-native';
+import { Text } from './components/StyledText';
+import { PetIcon, CalendarIcon } from './components/PetIcons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Task } from './types';

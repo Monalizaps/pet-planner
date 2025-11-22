@@ -7,14 +7,19 @@ import {
   Alert,
   Modal,
   TextInput,
+  Image,
+  Dimensions,
 } from 'react-native';
 import { Text } from '../components/StyledText';
+import { PetIcon, CalendarIcon } from '../components/PetIcons';
 import { useRouter } from 'expo-router';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
 import { Pet, Task } from '../types';
 import { getPets, getTasks, saveTask, deleteTask } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { scheduleTaskNotification } from '../utils/notifications';
+
+const { width } = Dimensions.get('window');
 
 // Configurar calendário em português
 LocaleConfig.locales['pt-br'] = {
@@ -81,12 +86,7 @@ export default function Jornada() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   const toggleTaskComplete = async (task: Task) => {
@@ -237,7 +237,15 @@ export default function Jornada() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>📅 Rotina</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <CalendarIcon size={28} color="#fff" />
+          <Text style={styles.headerTitle}>Rotina</Text>
+        </View>
+        <Image
+          source={require('../../assets/pets1.png')}
+          style={styles.petsDecoration}
+          resizeMode="contain"
+        />
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => router.push('/add-task')}
@@ -523,7 +531,7 @@ export default function Jornada() {
                     ]}
                     onPress={() => setSelectedPet(pet.id)}
                   >
-                    <Text style={styles.petOptionIcon}>{getPetIcon(pet.type)}</Text>
+                    <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
                     <Text style={styles.petOptionName}>{pet.name}</Text>
                   </TouchableOpacity>
                 ))}
@@ -620,7 +628,7 @@ export default function Jornada() {
                       ]}
                       onPress={() => setSelectedPet(pet.id)}
                     >
-                      <Text style={styles.petOptionIcon}>{getPetIcon(pet.type)}</Text>
+                      <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
                       <Text style={styles.petOptionName}>{pet.name}</Text>
                     </TouchableOpacity>
                   ))}
@@ -679,23 +687,33 @@ export default function Jornada() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: '#FAF7FF',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#B8A4E8',
     paddingTop: 60,
     paddingBottom: 30,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#6C63FF',
+    shadowColor: '#B8A4E8',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  petsDecoration: {
+    position: 'absolute',
+    bottom: width * -0.027,
+    right: width * 0.18,
+    width: width * 0.32,
+    height: width * 0.32,
+    opacity: 0.9,
   },
   headerTitle: {
     fontSize: 24,

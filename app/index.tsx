@@ -343,12 +343,7 @@ export default function Home() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   const getTasksForDate = (dateStr: string) => {

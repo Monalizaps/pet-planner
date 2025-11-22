@@ -139,7 +139,7 @@ export default function AboutSettings() {
         <View style={styles.creditsBox}>
           <Ionicons name="heart" size={20} color="#FF6B9D" />
           <Text style={styles.creditsText}>
-            Obrigado por escolher o Pet Planner para cuidar do seu melhor amigo! 🐾
+            Obrigado por escolher o Pet Planner para cuidar do seu melhor amigo!
           </Text>
         </View>
       </ScrollView>

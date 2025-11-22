@@ -6,13 +6,17 @@ import {
   StyleSheet,
   Image,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Text } from '../components/StyledText';
+import { PetIcon, PawIcon } from '../components/PetIcons';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pet, Tutor } from '../types';
 import { getPets, deletePet } from '../services/storage';
 import { secureRetrieve } from '../services/security';
+
+const { width } = Dimensions.get('window');
 
 export default function Mais() {
   const router = useRouter();
@@ -61,19 +65,22 @@ export default function Mais() {
   };
 
   const getPetIcon = (type: string) => {
-    switch (type) {
-      case 'dog': return '🐶';
-      case 'cat': return '🐱';
-      case 'bird': return '🦜';
-      default: return '🐾';
-    }
+    return type;
   };
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>⚙️ Mais</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <MaterialCommunityIcons name="cog" size={28} color="#fff" />
+          <Text style={styles.headerTitle}>Mais</Text>
+        </View>
+        <Image
+          source={require('../../assets/ramster.png')}
+          style={styles.hamsterDecoration}
+          resizeMode="contain"
+        />
       </View>
 
       <ScrollView 
@@ -117,7 +124,8 @@ export default function Mais() {
 
           {pets.length === 0 ? (
             <View style={styles.emptyCard}>
-              <Text style={styles.emptyText}>🐾 Adicione seu primeiro pet</Text>
+              <PawIcon size={32} color="#999" />
+              <Text style={styles.emptyText}>Adicione seu primeiro pet</Text>
             </View>
           ) : (
             pets.map((pet) => (
@@ -127,7 +135,7 @@ export default function Mais() {
                     <Image source={{ uri: pet.imageUri }} style={styles.petImage} />
                   ) : (
                     <View style={[styles.petImage, styles.petImagePlaceholder]}>
-                      <Text style={styles.petEmoji}>{getPetIcon(pet.type)}</Text>
+                      <PetIcon type={pet.type} size={28} color="#6C63FF" />
                     </View>
                   )}
                   <View>
@@ -248,7 +256,7 @@ export default function Mais() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: '#FAF7FF',
   },
   header: {
     backgroundColor: '#6C63FF',
@@ -259,9 +267,19 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 30,
     shadowColor: '#6C63FF',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 20,
     elevation: 10,
+    position: 'relative',
+    overflow: 'visible',
+  },
+  hamsterDecoration: {
+    position: 'absolute',
+    bottom: width * -0.027,
+    right: width * 0.05,
+    width: width * 0.27,
+    height: width * 0.27,
+    opacity: 0.9,
   },
   headerTitle: {
     fontSize: 24,
