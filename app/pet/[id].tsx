@@ -412,11 +412,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   infoValue: {
     fontSize: 16,
     color: '#333',
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     marginTop: 2,
     textAlign: 'center',
   },
@@ -431,11 +433,13 @@ const styles = StyleSheet.create({
   notesLabel: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#666',
     marginBottom: 8,
   },
   notesText: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#333',
     lineHeight: 20,
   },
@@ -455,6 +459,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#6C63FF',
   },
   statLabel: {
@@ -462,6 +467,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     marginTop: 4,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   tasksSection: {
     paddingHorizontal: 20,
@@ -475,6 +481,7 @@ const styles = StyleSheet.create({
   tasksTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#333',
   },
   addTaskButton: {
@@ -492,6 +499,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#999',
     marginBottom: 20,
   },
@@ -505,6 +513,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   taskCard: {
     flexDirection: 'row',
@@ -528,6 +537,7 @@ const styles = StyleSheet.create({
   taskTitle: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#333',
     marginBottom: 4,
   },
@@ -537,11 +547,13 @@ const styles = StyleSheet.create({
   },
   taskDescription: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
     marginBottom: 4,
   },
   taskDateTime: {
     fontSize: 12,
+    fontFamily: 'Quicksand_400Regular',
     color: '#999',
   },
   deleteButton: {

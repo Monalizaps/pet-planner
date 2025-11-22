@@ -347,6 +347,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
   },
   editButton: {
@@ -409,6 +410,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#2D3436',
     marginBottom: 8,
   },
@@ -417,6 +419,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     borderWidth: 2,
     borderColor: '#E8E6FF',
   },
@@ -440,6 +443,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   saveButton: {
     flex: 1,
@@ -452,6 +456,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   dangerZone: {
     marginTop: 40,
@@ -464,11 +469,13 @@ const styles = StyleSheet.create({
   dangerZoneTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#FF6B6B',
     marginBottom: 8,
   },
   dangerZoneSubtitle: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
     marginBottom: 16,
     lineHeight: 20,
@@ -497,6 +504,7 @@ const styles = StyleSheet.create({
   checkboxLabel: {
     flex: 1,
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
   },
   adminButton: {
@@ -515,6 +523,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   deleteButton: {
     backgroundColor: '#FF6B6B',
@@ -529,6 +538,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   modalOverlay: {
     flex: 1,
@@ -551,12 +561,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#2D3436',
     textAlign: 'center',
     marginBottom: 16,
   },
   modalMessage: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
     textAlign: 'center',
     lineHeight: 24,
@@ -577,6 +589,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   modalDeleteButton: {
     flex: 1,
@@ -589,5 +602,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
 });

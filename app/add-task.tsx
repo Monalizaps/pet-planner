@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,16 +12,18 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Task } from './types';
-import { saveTask } from './services/storage';
+import { Task, Pet } from './types';
+import { saveTask, getPets } from './services/storage';
 import { scheduleTaskNotification } from './utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
 
 export default function AddTask() {
   const router = useRouter();
-  const { petId } = useLocalSearchParams<{ petId: string }>();
+  const { petId: urlPetId } = useLocalSearchParams<{ petId: string }>();
 
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [selectedPetId, setSelectedPetId] = useState<string>(urlPetId || '');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(new Date());
@@ -31,6 +33,27 @@ export default function AddTask() {
   const [recurring, setRecurring] = useState<'daily' | 'weekly' | 'monthly' | undefined>(
     undefined
   );
+
+  useEffect(() => {
+    loadPets();
+  }, []);
+
+  const loadPets = async () => {
+    const petsData = await getPets();
+    setPets(petsData);
+    if (!selectedPetId && petsData.length > 0) {
+      setSelectedPetId(petsData[0].id);
+    }
+  };
+
+  const getPetIcon = (type: string) => {
+    switch (type) {
+      case 'dog': return '🐶';
+      case 'cat': return '🐱';
+      case 'bird': return '🦜';
+      default: return '🐾';
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -43,8 +66,8 @@ export default function AddTask() {
       return;
     }
 
-    if (!petId) {
-      Alert.alert('Erro', 'Pet não identificado.');
+    if (!selectedPetId) {
+      Alert.alert('Pet obrigatório', 'Por favor, selecione um pet.');
       return;
     }
 
@@ -57,7 +80,7 @@ export default function AddTask() {
 
     const newTask: Task = {
       id: uuidv4(),
-      petId,
+      petId: selectedPetId,
       title: title.trim(),
       description: description.trim(),
       dateTime,
@@ -110,14 +133,36 @@ export default function AddTask() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Nova Tarefa</Text>
+        <Text style={styles.title}>✅ Nova Tarefa</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+        <Text style={styles.label}>Pet</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petsScroll}>
+          {pets.map((pet) => (
+            <TouchableOpacity
+              key={pet.id}
+              style={[
+                styles.petOption,
+                selectedPetId === pet.id && styles.petOptionSelected,
+              ]}
+              onPress={() => setSelectedPetId(pet.id)}
+            >
+              <Text style={styles.petIcon}>{getPetIcon(pet.type)}</Text>
+              <Text style={[
+                styles.petName,
+                selectedPetId === pet.id && styles.petNameSelected,
+              ]}>
+                {pet.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
         <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
@@ -223,7 +268,7 @@ export default function AddTask() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FD',
   },
   header: {
     flexDirection: 'row',
@@ -231,50 +276,103 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingBottom: 30,
+    backgroundColor: '#6C63FF',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  backButton: {
+    padding: 8,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#fff',
   },
   content: {
     flex: 1,
     padding: 20,
   },
+  petsScroll: {
+    marginBottom: 20,
+  },
+  petOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 12,
+    marginRight: 12,
+    minWidth: 80,
+    borderWidth: 2,
+    borderColor: '#E8E6FF',
+  },
+  petOptionSelected: {
+    borderColor: '#6C63FF',
+    backgroundColor: '#F5F4FF',
+  },
+  petIcon: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  petName: {
+    fontSize: 14,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#666',
+  },
+  petNameSelected: {
+    color: '#6C63FF',
+  },
   label: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     marginBottom: 10,
     color: '#333',
   },
   input: {
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 16,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E8E6FF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   textArea: {
-    height: 80,
+    height: 100,
     textAlignVertical: 'top',
+    paddingTop: 16,
   },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E8E6FF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   dateButtonText: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     marginLeft: 10,
     color: '#333',
   },
@@ -288,15 +386,22 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 16,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#eee',
+    borderColor: '#E8E6FF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   recurringButtonActive: {
     borderColor: '#6C63FF',
-    backgroundColor: '#f0f0ff',
+    backgroundColor: '#E8E6FF',
+    shadowColor: '#6C63FF',
+    shadowOpacity: 0.2,
   },
   recurringIcon: {
     fontSize: 24,
@@ -304,22 +409,29 @@ const styles = StyleSheet.create({
   },
   recurringLabel: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
   },
   recurringLabelActive: {
     color: '#6C63FF',
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   saveButton: {
     backgroundColor: '#6C63FF',
-    padding: 16,
-    borderRadius: 10,
+    padding: 18,
+    borderRadius: 20,
     alignItems: 'center',
     marginBottom: 40,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
   },
 });

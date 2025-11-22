@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Pet, Task } from '../types';
+import { Pet, Task, MoodEntry, MoodAnalysis, MoodType, MoodSymptom } from '../types';
 import {
   secureStore,
   secureRetrieve,
@@ -216,4 +216,152 @@ export async function toggleTaskCompletion(taskId: string): Promise<void> {
     console.error('Error toggling task:', error);
     throw error;
   }
+}
+
+// ===== MOOD TRACKING =====
+
+const MOODS_KEY = '@pet_planner_moods';
+
+export const AVAILABLE_SYMPTOMS: MoodSymptom[] = [
+  // Físicos
+  { id: 'sem_apetite', label: 'Sem apetite', category: 'fisico' },
+  { id: 'muito_apetite', label: 'Muito apetite', category: 'fisico' },
+  { id: 'vomito', label: 'Vômito', category: 'fisico' },
+  { id: 'diarreia', label: 'Diarreia', category: 'fisico' },
+  { id: 'letargia', label: 'Letargia/Cansaço', category: 'fisico' },
+  { id: 'tremores', label: 'Tremores', category: 'fisico' },
+  { id: 'coceira', label: 'Coceira excessiva', category: 'fisico' },
+  
+  // Comportamentais
+  { id: 'agressivo', label: 'Agressividade', category: 'comportamental' },
+  { id: 'isolamento', label: 'Isolamento', category: 'comportamental' },
+  { id: 'destrutivo', label: 'Comportamento destrutivo', category: 'comportamental' },
+  { id: 'muito_vocal', label: 'Muito vocal (miados/latidos)', category: 'comportamental' },
+  { id: 'hiperativo', label: 'Hiperatividade', category: 'comportamental' },
+  { id: 'nao_brinca', label: 'Não quer brincar', category: 'comportamental' },
+];
+
+export async function getMoodEntries(petId?: string): Promise<MoodEntry[]> {
+  try {
+    const data = await secureRetrieve(MOODS_KEY);
+    if (!data) return [];
+    
+    const entries = data.map((m: any) => ({
+      ...m,
+      date: new Date(m.date),
+      createdAt: new Date(m.createdAt),
+    }));
+    
+    return petId ? entries.filter((e: MoodEntry) => e.petId === petId) : entries;
+  } catch (error) {
+    console.error('Error loading mood entries:', error);
+    return [];
+  }
+}
+
+export async function saveMoodEntry(entry: MoodEntry): Promise<void> {
+  try {
+    const entries = await getMoodEntries();
+    const existingIndex = entries.findIndex((e) => e.id === entry.id);
+    
+    if (existingIndex >= 0) {
+      entries[existingIndex] = entry;
+    } else {
+      entries.push(entry);
+    }
+    
+    await secureStore(MOODS_KEY, entries);
+  } catch (error) {
+    console.error('Error saving mood entry:', error);
+    throw error;
+  }
+}
+
+export async function getTodayMoodEntry(petId: string): Promise<MoodEntry | null> {
+  const entries = await getMoodEntries(petId);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  return entries.find(e => {
+    const entryDate = new Date(e.date);
+    entryDate.setHours(0, 0, 0, 0);
+    return entryDate.getTime() === today.getTime();
+  }) || null;
+}
+
+export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
+  const entries = await getMoodEntries(petId);
+  
+  const now = new Date();
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  
+  const currentMonthEntries = entries.filter(e => new Date(e.date) >= currentMonthStart);
+  const previousMonthEntries = entries.filter(e => 
+    new Date(e.date) >= previousMonthStart && new Date(e.date) <= previousMonthEnd
+  );
+  
+  const countMoods = (moodEntries: MoodEntry[]) => {
+    const counts = {
+      feliz: 0,
+      calmo: 0,
+      ansioso: 0,
+      triste: 0,
+      irritado: 0,
+      energetico: 0,
+    };
+    moodEntries.forEach(e => counts[e.mood]++);
+    return counts;
+  };
+  
+  const currentMonth = countMoods(currentMonthEntries);
+  const previousMonth = countMoods(previousMonthEntries);
+  
+  // Calcular sintomas mais comuns
+  const symptomCounts: { [key: string]: number } = {};
+  currentMonthEntries.forEach(e => {
+    e.symptoms.forEach(s => {
+      symptomCounts[s] = (symptomCounts[s] || 0) + 1;
+    });
+  });
+  
+  const commonSymptoms = Object.entries(symptomCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([id]) => AVAILABLE_SYMPTOMS.find(s => s.id === id)?.label || id);
+  
+  // Análise de alerta
+  const negativeCount = currentMonth.ansioso + currentMonth.triste + currentMonth.irritado;
+  const positiveCount = currentMonth.feliz + currentMonth.calmo + currentMonth.energetico;
+  const totalCount = currentMonthEntries.length;
+  
+  let alertLevel: 'normal' | 'atencao' | 'alerta' = 'normal';
+  let message = 'Seu pet está bem! Continue cuidando com carinho. 💚';
+  
+  if (totalCount >= 7) {
+    const negativeRatio = negativeCount / totalCount;
+    
+    if (negativeRatio > 0.6) {
+      alertLevel = 'alerta';
+      message = '⚠️ Seu pet tem apresentado humor negativo com frequência. Considere consultar um veterinário.';
+    } else if (negativeRatio > 0.4) {
+      alertLevel = 'atencao';
+      message = '⚡ Seu pet tem tido dias difíceis. Fique atento ao comportamento dele.';
+    } else if (positiveCount > negativeCount * 2) {
+      message = '🌟 Seu pet está muito feliz! Continue assim!';
+    }
+  } else if (totalCount > 0) {
+    message = '📊 Continue registrando o humor diário para análises mais precisas.';
+  } else {
+    message = '🐾 Comece a registrar o humor do seu pet para acompanhar o bem-estar dele!';
+  }
+  
+  return {
+    currentMonth,
+    previousMonth,
+    alertLevel,
+    message,
+    commonSymptoms,
+  };
 }

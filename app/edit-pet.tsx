@@ -301,6 +301,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
   },
   content: {
@@ -335,6 +336,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   cameraIcon: {
     position: 'absolute',
@@ -355,6 +357,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#333',
     marginBottom: 8,
   },
@@ -363,6 +366,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#333',
     borderWidth: 1,
     borderColor: '#E8E6FF',
@@ -397,6 +401,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   typeLabelSelected: {
     color: '#6C63FF',
@@ -414,6 +419,7 @@ const styles = StyleSheet.create({
   dateButtonText: {
     flex: 1,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#333',
   },
   clearButton: {
@@ -438,5 +444,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
 });

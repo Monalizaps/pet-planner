@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -12,6 +11,8 @@ import {
   TextInput,
   Linking,
 } from 'react-native';
+import { Text } from './components/StyledText';
+import { MoodTracker } from './components/MoodTracker';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Calendar, DateData, LocaleConfig } from 'react-native-calendars';
@@ -78,6 +79,13 @@ export default function Home() {
     loadTutorProfile();
     loadSocialPosts();
   }, []);
+
+  // Redirecionar para tabs se já tem perfil
+  useEffect(() => {
+    if (tutor) {
+      router.replace('/(tabs)');
+    }
+  }, [tutor]);
 
   const loadTutorProfile = async () => {
     try {
@@ -237,7 +245,14 @@ export default function Home() {
                   minute: '2-digit',
                 });
                 return (
-                  <View key={task.id} style={styles.modalItem}>
+                  <TouchableOpacity 
+                    key={task.id} 
+                    style={styles.modalItem}
+                    onPress={() => {
+                      setModalVisible(false);
+                      router.push(`/edit-task?taskId=${task.id}`);
+                    }}
+                  >
                     <View style={styles.modalTaskIcon}>
                       <Text style={styles.modalTaskIconText}>
                         {task.completed ? '✓' : '○'}
@@ -251,7 +266,8 @@ export default function Home() {
                         {pet?.name} • {time}
                       </Text>
                     </View>
-                  </View>
+                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                  </TouchableOpacity>
                 );
               })
             )}
@@ -281,7 +297,14 @@ export default function Home() {
                   minute: '2-digit',
                 });
                 return (
-                  <View key={task.id} style={styles.modalItem}>
+                  <TouchableOpacity 
+                    key={task.id} 
+                    style={styles.modalItem}
+                    onPress={() => {
+                      setModalVisible(false);
+                      router.push(`/edit-task?taskId=${task.id}`);
+                    }}
+                  >
                     <View style={styles.modalDateBadge}>
                       <Text style={styles.modalDateText}>{dateStr}</Text>
                     </View>
@@ -291,7 +314,8 @@ export default function Home() {
                         {pet?.name} • {time}
                       </Text>
                     </View>
-                  </View>
+                    <Ionicons name="chevron-forward" size={20} color="#999" />
+                  </TouchableOpacity>
                 );
               })
             )}
@@ -537,6 +561,11 @@ export default function Home() {
           </View>
         )}
 
+        {/* Medidor de Humor */}
+        {pets.length > 0 && (
+          <MoodTracker pets={pets} onMoodUpdated={loadData} />
+        )}
+
         {/* Calendário */}
         <View style={styles.calendarCard}>
           <Text style={styles.sectionTitle}>📆 Agenda</Text>
@@ -561,6 +590,9 @@ export default function Home() {
               textDayFontSize: 14,
               textMonthFontSize: 18,
               textDayHeaderFontSize: 12,
+              textDayFontFamily: 'Quicksand_500Medium',
+              textMonthFontFamily: 'Quicksand_700Bold',
+              textDayHeaderFontFamily: 'Quicksand_600SemiBold',
               arrowColor: '#6C63FF',
             }}
             style={{
@@ -721,16 +753,18 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
     marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#E8E6FF',
   },
   createProfileLink: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#fff',
     textDecorationLine: 'underline',
     marginTop: 4,
@@ -755,6 +789,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+    fontFamily: 'Quicksand_700Bold',
   },
   content: {
     flex: 1,
@@ -775,7 +810,7 @@ const styles = StyleSheet.create({
   },
   statNumber: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#6C63FF',
   },
   statLabel: {
@@ -783,6 +818,7 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
     marginTop: 4,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   statIcon: {
     fontSize: 24,
@@ -801,7 +837,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#2D3436',
     marginBottom: 16,
   },
@@ -828,16 +864,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6C63FF',
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     marginBottom: 4,
   },
   taskTitle: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#2D3436',
     marginBottom: 4,
   },
   taskTime: {
     fontSize: 12,
+    fontFamily: 'Quicksand_400Regular',
     color: '#636E72',
   },
   petsSection: {
@@ -880,6 +919,7 @@ const styles = StyleSheet.create({
   petCardName: {
     fontSize: 14,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#2D3436',
     textAlign: 'center',
   },
@@ -895,13 +935,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#2D3436',
     marginBottom: 12,
     textAlign: 'center',
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#636E72',
     textAlign: 'center',
     marginBottom: 30,
@@ -924,6 +965,7 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#6C63FF',
   },
   dayContainer: {
@@ -939,6 +981,7 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'Quicksand_500Medium',
     color: '#2d4150',
   },
   todayText: {
@@ -960,13 +1003,16 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   modalContainer: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderRadius: 24,
     maxHeight: '80%',
+    width: '100%',
+    maxWidth: 500,
     paddingTop: 20,
   },
   modalCloseButton: {
@@ -981,12 +1027,13 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#333',
     marginBottom: 20,
   },
   modalEmptyText: {
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#999',
     textAlign: 'center',
     marginTop: 20,
@@ -1024,11 +1071,13 @@ const styles = StyleSheet.create({
   modalItemTitle: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#333',
     marginBottom: 4,
   },
   modalItemSubtitle: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
   },
   modalTaskIcon: {
@@ -1043,7 +1092,7 @@ const styles = StyleSheet.create({
   modalTaskIconText: {
     fontSize: 20,
     color: '#6C63FF',
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
   },
   modalDateBadge: {
     backgroundColor: '#6C63FF',
@@ -1054,7 +1103,7 @@ const styles = StyleSheet.create({
   },
   modalDateText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#fff',
   },
   completedTask: {
@@ -1103,18 +1152,20 @@ const styles = StyleSheet.create({
   feedPlatformText: {
     fontSize: 12,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     color: '#6C63FF',
     textTransform: 'uppercase',
   },
   feedPostTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#333',
     marginBottom: 8,
     lineHeight: 22,
   },
   feedPostDescription: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
     lineHeight: 20,
     marginBottom: 12,
@@ -1129,18 +1180,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6C63FF',
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   socialFeedIcon: {
     fontSize: 32,
   },
   socialFeedTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Quicksand_700Bold',
     color: '#333',
     marginBottom: 2,
   },
   socialFeedSubtitle: {
     fontSize: 13,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
   },
 });

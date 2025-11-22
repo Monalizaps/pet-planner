@@ -105,10 +105,10 @@ export default function AddPet() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>Adicionar Pet</Text>
+        <Text style={styles.title}>🐾 Adicionar Pet</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -118,7 +118,7 @@ export default function AddPet() {
             <Image source={{ uri: imageUri }} style={styles.image} />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Ionicons name="camera" size={40} color="#999" />
+              <Ionicons name="camera" size={40} color="#6C63FF" />
               <Text style={styles.imagePlaceholderText}>Adicionar Foto</Text>
             </View>
           )}
@@ -240,7 +240,7 @@ export default function AddPet() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8F9FD',
   },
   header: {
     flexDirection: 'row',
@@ -248,14 +248,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 60,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingBottom: 30,
+    backgroundColor: '#6C63FF',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  backButton: {
+    padding: 8,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 24,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#fff',
   },
   content: {
     flex: 1,
@@ -274,32 +283,40 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     borderRadius: 75,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#E8E6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#ddd',
+    borderWidth: 3,
+    borderColor: '#6C63FF',
     borderStyle: 'dashed',
   },
   imagePlaceholderText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#999',
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#6C63FF',
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
     marginBottom: 10,
     color: '#333',
   },
   input: {
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 16,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#E8E6FF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   typeContainer: {
     flexDirection: 'row',
@@ -311,15 +328,22 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: '45%',
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
+    padding: 16,
+    borderRadius: 16,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#eee',
+    borderColor: '#E8E6FF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   typeButtonActive: {
     borderColor: '#6C63FF',
-    backgroundColor: '#f0f0ff',
+    backgroundColor: '#E8E6FF',
+    shadowColor: '#6C63FF',
+    shadowOpacity: 0.2,
   },
   typeIcon: {
     fontSize: 32,
@@ -327,45 +351,59 @@ const styles = StyleSheet.create({
   },
   typeLabel: {
     fontSize: 14,
+    fontFamily: 'Quicksand_400Regular',
     color: '#666',
   },
   typeLabelActive: {
     color: '#6C63FF',
     fontWeight: '600',
+    fontFamily: 'Quicksand_600SemiBold',
   },
   dateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#E8E6FF',
     gap: 12,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   dateText: {
     flex: 1,
     fontSize: 16,
+    fontFamily: 'Quicksand_400Regular',
     color: '#333',
   },
   clearButton: {
     padding: 4,
   },
   textArea: {
-    height: 100,
+    height: 120,
     paddingTop: 16,
     textAlignVertical: 'top',
   },
   saveButton: {
     backgroundColor: '#6C63FF',
-    padding: 16,
-    borderRadius: 10,
+    padding: 18,
+    borderRadius: 20,
     alignItems: 'center',
     marginTop: 20,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   saveButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
   },
 });
