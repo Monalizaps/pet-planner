@@ -4,6 +4,14 @@
 dist/
 web-build/
 
+# Android/IOS build files
+android/build/
+android/app/build/
+android/.gradle/
+ios/build/
+ios/Pods/
+ios/*.xcworkspace/xcuserdata/
+
 # Dependencies
 node_modules/
 npm-debug.log*
