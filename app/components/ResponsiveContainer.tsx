@@ -8,6 +8,7 @@ import {
   ViewStyle,
   useWindowDimensions,
 } from 'react-native';
+import { colors } from '../theme/colors';
 
 interface ResponsiveContainerProps {
   children: React.ReactNode;
@@ -51,9 +52,11 @@ export function ResponsiveContainer({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   keyboardView: {
     flex: 1,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,

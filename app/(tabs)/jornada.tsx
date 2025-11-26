@@ -20,6 +20,7 @@ import { Pet, Task } from '../types';
 import { getPets, getTasks, saveTask, deleteTask } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { scheduleTaskNotification } from '../utils/notifications';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const { width } = Dimensions.get('window');
 
@@ -60,6 +61,14 @@ export default function Jornada() {
   const [quickTaskTitle, setQuickTaskTitle] = useState('');
   const [quickTaskTime, setQuickTaskTime] = useState('09:00');
   const [quickTaskDescription, setQuickTaskDescription] = useState('');
+  
+  // Time pickers
+  const [showQuickTaskTimePicker, setShowQuickTaskTimePicker] = useState(false);
+  const [showFeedingTimePicker, setShowFeedingTimePicker] = useState(false);
+  const [showMedicationTimePicker, setShowMedicationTimePicker] = useState(false);
+  const [quickTaskTimeDate, setQuickTaskTimeDate] = useState(new Date());
+  const [feedingStartTimeDate, setFeedingStartTimeDate] = useState(new Date());
+  const [medicationStartTimeDate, setMedicationStartTimeDate] = useState(new Date());
 
   useEffect(() => {
     loadData();
@@ -96,10 +105,59 @@ export default function Jornada() {
     const dateStr = day.dateString;
     setSelectedDate(dateStr);
     
-    const tasksOnDate = getTasksForDate(dateStr);
-    if (tasksOnDate.length === 0) {
-      // Sem tarefas nesta data, abrir modal de criação rápida
-      setShowQuickTaskModal(true);
+    // Sempre abrir modal de criação rápida ao clicar em uma data
+    setShowQuickTaskModal(true);
+  };
+
+  // Handlers para os time pickers
+  const onQuickTaskTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowQuickTaskTimePicker(false);
+    }
+    if (event.type === 'set' && selectedTime) {
+      setQuickTaskTimeDate(selectedTime);
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setQuickTaskTime(`${hours}:${minutes}`);
+      if (Platform.OS === 'ios') {
+        setShowQuickTaskTimePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowQuickTaskTimePicker(false);
+    }
+  };
+
+  const onFeedingTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowFeedingTimePicker(false);
+    }
+    if (event.type === 'set' && selectedTime) {
+      setFeedingStartTimeDate(selectedTime);
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setFeedingStartTime(`${hours}:${minutes}`);
+      if (Platform.OS === 'ios') {
+        setShowFeedingTimePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowFeedingTimePicker(false);
+    }
+  };
+
+  const onMedicationTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowMedicationTimePicker(false);
+    }
+    if (event.type === 'set' && selectedTime) {
+      setMedicationStartTimeDate(selectedTime);
+      const hours = selectedTime.getHours().toString().padStart(2, '0');
+      const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+      setMedicationStartTime(`${hours}:${minutes}`);
+      if (Platform.OS === 'ios') {
+        setShowMedicationTimePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowMedicationTimePicker(false);
     }
   };
 
@@ -627,14 +685,25 @@ export default function Jornada() {
                 )}
 
                 <Text style={styles.modalLabel}>Horário da primeira refeição</Text>
-                <TextInput
+                <TouchableOpacity
                   style={styles.modalInput}
-                  value={feedingStartTime}
-                  onChangeText={setFeedingStartTime}
-                  placeholder="Ex: 08:00"
-                  placeholderTextColor="#999"
-                  keyboardType="numbers-and-punctuation"
-                />
+                  onPress={() => setShowFeedingTimePicker(true)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 16, color: '#2D3748' }}>{feedingStartTime}</Text>
+                    <Ionicons name="time-outline" size={20} color="#6C63FF" />
+                  </View>
+                </TouchableOpacity>
+                
+                {showFeedingTimePicker && (
+                  <DateTimePicker
+                    value={feedingStartTimeDate}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onFeedingTimeChange}
+                    is24Hour={true}
+                  />
+                )}
 
                 <Text style={styles.modalLabel}>A cada quantas horas?</Text>
                 <TextInput
@@ -738,14 +807,25 @@ export default function Jornada() {
                 )}
 
                 <Text style={styles.modalLabel}>Horário da primeira dose</Text>
-                <TextInput
+                <TouchableOpacity
                   style={styles.modalInput}
-                  value={medicationStartTime}
-                  onChangeText={setMedicationStartTime}
-                  placeholder="Ex: 08:00"
-                  placeholderTextColor="#999"
-                  keyboardType="numbers-and-punctuation"
-                />
+                  onPress={() => setShowMedicationTimePicker(true)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 16, color: '#2D3748' }}>{medicationStartTime}</Text>
+                    <Ionicons name="time-outline" size={20} color="#6C63FF" />
+                  </View>
+                </TouchableOpacity>
+                
+                {showMedicationTimePicker && (
+                  <DateTimePicker
+                    value={medicationStartTimeDate}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onMedicationTimeChange}
+                    is24Hour={true}
+                  />
+                )}
 
                 <Text style={styles.modalLabel}>A cada quantas horas?</Text>
                 <TextInput
@@ -888,14 +968,25 @@ export default function Jornada() {
 
                 {/* Horário */}
                 <Text style={styles.modalLabel}>Horário</Text>
-                <TextInput
+                <TouchableOpacity
                   style={styles.modalInput}
-                  value={quickTaskTime}
-                  onChangeText={setQuickTaskTime}
-                  placeholder="Ex: 09:00"
-                  placeholderTextColor="#999"
-                  keyboardType="numbers-and-punctuation"
-                />
+                  onPress={() => setShowQuickTaskTimePicker(true)}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Text style={{ fontSize: 16, color: '#2D3748' }}>{quickTaskTime}</Text>
+                    <Ionicons name="time-outline" size={20} color="#6C63FF" />
+                  </View>
+                </TouchableOpacity>
+                
+                {showQuickTaskTimePicker && (
+                  <DateTimePicker
+                    value={quickTaskTimeDate}
+                    mode="time"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onQuickTaskTimeChange}
+                    is24Hour={true}
+                  />
+                )}
 
                 {/* Descrição (Opcional) */}
                 <Text style={styles.modalLabel}>Observações (opcional)</Text>
@@ -1229,6 +1320,7 @@ const styles = StyleSheet.create({
     color: '#2D3748',
     borderWidth: 1,
     borderColor: '#E8E6FF',
+    marginBottom: 12,
   },
   modalHint: {
     fontSize: 12,

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { Text } from './components/StyledText';
 import { PetIcon, CalendarIcon } from './components/PetIcons';
@@ -124,16 +125,30 @@ export default function EditTask() {
   };
 
   const onDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (event.type === 'set' && selectedDate) {
       setDate(selectedDate);
+      if (Platform.OS === 'ios') {
+        setShowDatePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowDatePicker(false);
     }
   };
 
   const onTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
+    if (event.type === 'set' && selectedTime) {
       setTime(selectedTime);
+      if (Platform.OS === 'ios') {
+        setShowTimePicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowTimePicker(false);
     }
   };
 
@@ -210,7 +225,7 @@ export default function EditTask() {
           <DateTimePicker
             value={date}
             mode="date"
-            display="default"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onDateChange}
           />
         )}
@@ -220,7 +235,7 @@ export default function EditTask() {
           style={styles.dateButton}
           onPress={() => setShowTimePicker(true)}
         >
-          <Ionicons name="time-outline" size={20} color="colors.primary" />
+          <Ionicons name="time-outline" size={20} color={colors.primary} />
           <Text style={[styles.dateButtonText, !time && { color: '#999' }]}>
             {time
               ? time.toLocaleTimeString('pt-BR', {
@@ -235,7 +250,7 @@ export default function EditTask() {
           <DateTimePicker
             value={time || new Date()}
             mode="time"
-            display="spinner"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             onChange={onTimeChange}
             is24Hour={true}
           />
@@ -277,7 +292,7 @@ export default function EditTask() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -286,10 +301,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 30,
-    backgroundColor: 'colors.primary',
+    backgroundColor: colors.primary,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: 'colors.primary',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -311,6 +326,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: 20,
+    backgroundColor: colors.background,
   },
   label: {
     fontSize: 16,
@@ -382,9 +398,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   recurringButtonActive: {
-    borderColor: 'colors.primary',
+    borderColor: colors.primary,
     backgroundColor: colors.secondary + '20',
-    shadowColor: 'colors.primary',
+    shadowColor: colors.primary,
     shadowOpacity: 0.2,
   },
   recurringIcon: {
@@ -397,17 +413,17 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   recurringLabelActive: {
-    color: 'colors.primary',
+    color: colors.primary,
     fontWeight: '600',
     fontFamily: 'Quicksand_600SemiBold',
   },
   saveButton: {
-    backgroundColor: 'colors.primary',
+    backgroundColor: colors.primary,
     padding: 18,
     borderRadius: 20,
     alignItems: 'center',
     marginBottom: 40,
-    shadowColor: 'colors.primary',
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,

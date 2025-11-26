@@ -360,6 +360,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    backgroundColor: '#F8F9FD',
   },
   imageSection: {
     alignItems: 'center',

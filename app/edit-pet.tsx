@@ -283,7 +283,7 @@ export default function EditPet() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'colors.background',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: 'colors.primary',
+    backgroundColor: colors.primary,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
@@ -305,6 +305,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 20,
+    backgroundColor: colors.background,
   },
   imageContainer: {
     alignSelf: 'center',
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 4,
-    borderColor: 'colors.primary',
+    borderColor: colors.primary,
   },
   imagePlaceholder: {
     width: 140,
@@ -326,12 +327,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'colors.primary',
+    borderColor: colors.primary,
     borderStyle: 'dashed',
   },
   imagePlaceholderText: {
     marginTop: 8,
-    color: 'colors.primary',
+    color: colors.primary,
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'Quicksand_600SemiBold',
@@ -340,7 +341,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 5,
     bottom: 5,
-    backgroundColor: 'colors.primary',
+    backgroundColor: colors.primary,
     width: 40,
     height: 40,
     borderRadius: 20,
