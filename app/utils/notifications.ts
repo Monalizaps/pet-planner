@@ -10,7 +10,7 @@ async function getNotificationSettings() {
       return JSON.parse(settings);
     }
   } catch (error) {
-    console.error('Error loading notification settings:', error);
+    console.log('Error loading notification settings:', error);
   }
   return {
     taskReminders: true,
@@ -111,7 +111,7 @@ export async function scheduleTaskNotification(
       });
       console.log('📱 [NOTIFICAÇÃO] Nova permissão:', newStatus);
       if (newStatus !== 'granted') {
-        console.error('❌ [NOTIFICAÇÃO] Permissão negada pelo usuário');
+        console.log('❌ [NOTIFICAÇÃO] Permissão negada pelo usuário');
         return null;
       }
     }
@@ -121,7 +121,7 @@ export async function scheduleTaskNotification(
     console.log('⏰ [NOTIFICAÇÃO] Agendado para:', dateTime.toLocaleString('pt-BR'));
     
     if (dateTime <= now && !recurring) {
-      console.error('❌ [NOTIFICAÇÃO] Data no passado, cancelando');
+      console.log('❌ [NOTIFICAÇÃO] Data no passado, cancelando');
       return null;
     }
 
@@ -152,7 +152,7 @@ export async function scheduleTaskNotification(
       console.log(`⏱️ [NOTIFICAÇÃO] Será disparada em ${secondsFromNow} segundos (${Math.floor(secondsFromNow / 60)} minutos)`);
       
       if (secondsFromNow < 1) {
-        console.error('❌ [NOTIFICAÇÃO] Tempo insuficiente, cancelando');
+        console.log('❌ [NOTIFICAÇÃO] Tempo insuficiente, cancelando');
         return null;
       }
 
@@ -188,7 +188,7 @@ export async function scheduleTaskNotification(
     
     return notificationId;
   } catch (error) {
-    console.error('❌ [NOTIFICAÇÃO] Erro ao agendar:', error);
+    console.log('❌ [NOTIFICAÇÃO] Erro ao agendar:', error);
     return null;
   }
 }

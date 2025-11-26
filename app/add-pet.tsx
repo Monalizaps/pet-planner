@@ -5,11 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   Image,
   Alert,
   Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -21,6 +19,7 @@ import { secureRetrieve } from './services/security';
 import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { colors } from './theme/colors';
+import { ResponsiveContainer } from './components/ResponsiveContainer';
 
 export default function AddPet() {
   const router = useRouter();
@@ -43,9 +42,8 @@ export default function AddPet() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
       quality: 0.7,
     });
 
@@ -100,11 +98,7 @@ export default function AddPet() {
   ] as const;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
+    <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -113,7 +107,7 @@ export default function AddPet() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+      <View style={styles.content}>
         <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.image} />
@@ -233,8 +227,8 @@ export default function AddPet() {
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </View>
+    </ResponsiveContainer>
   );
 }
 

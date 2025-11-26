@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Platform,
   Alert,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -16,8 +14,10 @@ import { Task, Pet } from './types';
 import { saveTask, getPets } from './services/storage';
 import { scheduleTaskNotification } from './utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
+import { TaskIcon } from './components/PetIcons';
 import { v4 as uuidv4 } from 'uuid';
 import { colors } from './theme/colors';
+import { ResponsiveContainer } from './components/ResponsiveContainer';
 
 export default function AddTask() {
   const router = useRouter();
@@ -34,6 +34,7 @@ export default function AddTask() {
   const [recurring, setRecurring] = useState<'daily' | 'weekly' | 'monthly' | undefined>(
     undefined
   );
+  const [taskType, setTaskType] = useState<'medication' | 'feeding' | 'consultation' | 'grooming' | 'exercise' | 'other'>('other');
 
   useEffect(() => {
     loadPets();
@@ -82,6 +83,7 @@ export default function AddTask() {
       dateTime,
       recurring,
       completed: false,
+      taskType,
     };
 
     // Schedule notification
@@ -123,11 +125,7 @@ export default function AddTask() {
   ] as const;
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
+    <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -139,7 +137,40 @@ export default function AddTask() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
+      <View style={styles.content}>
+        <Text style={styles.label}>Tipo de Tarefa</Text>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 20 }}
+        >
+          {[
+            { type: 'medication' as const, icon: '💊', label: 'Medicação' },
+            { type: 'feeding' as const, icon: '🍽️', label: 'Refeição' },
+            { type: 'consultation' as const, icon: '🏥', label: 'Consulta' },
+            { type: 'grooming' as const, icon: '✂️', label: 'Banho/Tosa' },
+            { type: 'exercise' as const, icon: '🏃', label: 'Exercício' },
+            { type: 'other' as const, icon: '📝', label: 'Outro' },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.type}
+              style={[
+                styles.taskTypeChip,
+                taskType === item.type && styles.taskTypeChipSelected,
+              ]}
+              onPress={() => setTaskType(item.type)}
+            >
+              <Text style={styles.taskTypeIcon}>{item.icon}</Text>
+              <Text style={[
+                styles.taskTypeLabel,
+                taskType === item.type && styles.taskTypeLabelSelected,
+              ]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
         <Text style={styles.label}>Pet</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petsScroll}>
           {pets.map((pet) => (
@@ -187,7 +218,7 @@ export default function AddTask() {
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
         >
-          <Ionicons name="calendar-outline" size={20} color="#6C63FF" />
+          <Ionicons name="calendar-outline" size={20} color="colors.primary" />
           <Text style={styles.dateButtonText}>
             {date.toLocaleDateString('pt-BR', {
               day: '2-digit',
@@ -211,7 +242,7 @@ export default function AddTask() {
           style={styles.dateButton}
           onPress={() => setShowTimePicker(true)}
         >
-          <Ionicons name="time-outline" size={20} color="#6C63FF" />
+          <Ionicons name="time-outline" size={20} color="colors.primary" />
           <Text style={[styles.dateButtonText, !time && { color: '#999' }]}>
             {time
               ? time.toLocaleTimeString('pt-BR', {
@@ -259,15 +290,16 @@ export default function AddTask() {
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Salvar Tarefa</Text>
         </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <View style={{ height: 40 }} />
+      </View>
+    </ResponsiveContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: 'colors.background',
   },
   header: {
     flexDirection: 'row',
@@ -276,10 +308,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 30,
-    backgroundColor: '#6C63FF',
+    backgroundColor: 'colors.primary',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    shadowColor: '#6C63FF',
+    shadowColor: 'colors.primary',
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -309,10 +341,10 @@ const styles = StyleSheet.create({
     marginRight: 12,
     minWidth: 80,
     borderWidth: 2,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
   },
   petOptionSelected: {
-    borderColor: '#6C63FF',
+    borderColor: 'colors.primary',
     backgroundColor: '#F5F4FF',
   },
   petIcon: {
@@ -325,7 +357,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   petNameSelected: {
-    color: '#6C63FF',
+    color: 'colors.primary',
   },
   label: {
     fontSize: 16,
@@ -342,7 +374,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_400Regular',
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -362,7 +394,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -389,7 +421,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -397,9 +429,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   recurringButtonActive: {
-    borderColor: '#6C63FF',
-    backgroundColor: '#E8E6FF',
-    shadowColor: '#6C63FF',
+    borderColor: 'colors.primary',
+    backgroundColor: colors.secondary + '20',
+    shadowColor: 'colors.primary',
     shadowOpacity: 0.2,
   },
   recurringIcon: {
@@ -412,17 +444,17 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   recurringLabelActive: {
-    color: '#6C63FF',
+    color: 'colors.primary',
     fontWeight: '600',
     fontFamily: 'Quicksand_600SemiBold',
   },
   saveButton: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: 'colors.primary',
     padding: 18,
     borderRadius: 20,
     alignItems: 'center',
     marginBottom: 40,
-    shadowColor: '#6C63FF',
+    shadowColor: 'colors.primary',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -432,5 +464,33 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontFamily: 'Quicksand_700Bold',
+  },
+  taskTypeChip: {
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 10,
+    borderRadius: 12,
+    backgroundColor: '#F8F9FD',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minWidth: 90,
+  },
+  taskTypeChipSelected: {
+    backgroundColor: '#E8E6FF',
+    borderColor: '#6C63FF',
+  },
+  taskTypeIcon: {
+    fontSize: 24,
+    marginBottom: 4,
+  },
+  taskTypeLabel: {
+    fontSize: 11,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#666',
+    textAlign: 'center',
+  },
+  taskTypeLabelSelected: {
+    color: '#6C63FF',
   },
 });

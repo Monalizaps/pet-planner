@@ -6,7 +6,7 @@ import {
   Modal,
   ScrollView,
   Alert,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Text } from './StyledText';
 import { MoodIcon, PetIcon, PawIcon } from './PetIcons';
@@ -19,8 +19,6 @@ import {
   AVAILABLE_SYMPTOMS 
 } from '../services/storage';
 import { v4 as uuid } from 'uuid';
-
-const { width } = Dimensions.get('window');
 
 interface MoodTrackerProps {
   pets: Pet[];
@@ -37,6 +35,7 @@ const MOODS: { type: MoodType; label: string; color: string }[] = [
 ];
 
 export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
+  const { width } = useWindowDimensions();
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [summaryModalVisible, setSummaryModalVisible] = useState(false);
@@ -44,6 +43,13 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [analysis, setAnalysis] = useState<MoodAnalysis | null>(null);
   const [todayEntry, setTodayEntry] = useState<MoodEntry | null>(null);
+
+  // Estilos dinâmicos baseados na largura da tela
+  const dynamicStyles = {
+    moodButton: {
+      width: Math.max(80, (width - 80) / 3), // Mínimo 80px
+    },
+  };
 
   useEffect(() => {
     if (pets.length > 0) {
@@ -117,7 +123,15 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
       totalDays += count;
     });
     
-    const averageScore = totalDays > 0 ? totalScore / totalDays : 0;
+    let averageScore = totalDays > 0 ? totalScore / totalDays : 0;
+    
+    // Ajustar score com base nos sintomas (análise já calculada no backend)
+    if (analysis.symptomScore !== undefined) {
+      // symptomScore vai de -2 a +2 pontos
+      averageScore += analysis.symptomScore;
+      // Manter entre 0 e 10
+      averageScore = Math.max(0, Math.min(10, averageScore));
+    }
     
     // Determinar status geral
     let status = '';
@@ -186,7 +200,15 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
       totalEntries += count;
     });
     
-    const averageScore = totalEntries > 0 ? (totalScore / totalEntries).toFixed(1) : '0.0';
+    let averageScore = totalEntries > 0 ? totalScore / totalEntries : 0;
+    
+    // Ajustar score com base nos sintomas
+    if (analysis.symptomScore !== undefined) {
+      averageScore += analysis.symptomScore;
+      averageScore = Math.max(0, Math.min(10, averageScore));
+    }
+    
+    const averageScoreFormatted = averageScore.toFixed(1);
 
     // Calcular ângulo para cada humor
     const moodAngles: Array<{ mood: typeof MOODS[0], angle: number, percentage: number }> = [];
@@ -238,7 +260,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
             
             {/* Centro branco com score */}
             <View style={styles.modernChartCenter}>
-              <Text style={styles.modernScoreText}>{averageScore}</Text>
+              <Text style={styles.modernScoreText}>{averageScoreFormatted}</Text>
               <Text style={styles.modernScoreLabel}>pontuação de saúde</Text>
             </View>
           </View>
@@ -269,7 +291,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
             <Text style={styles.infoTitle}>Como funciona a pontuação?</Text>
             <Text style={styles.infoText}>
               Cada humor tem um valor: Feliz (10), Energético (9), Calmo (8), Ansioso (5), Triste (3) e Irritado (2). 
-              A pontuação é a média dos humores registrados no mês.
+              Sintomas positivos (✅) aumentam +0.5 e negativos (❌) reduzem -0.5 por ocorrência. A pontuação final é a média combinada.
             </Text>
             <Text style={styles.infoDisclaimer}>
               ⚠️ Esta pontuação não substitui consultas veterinárias. Variações de humor são normais e dependem da personalidade do seu pet.
@@ -415,6 +437,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                       key={mood.type}
                       style={[
                         styles.moodButton,
+                        dynamicStyles.moodButton,
                         selectedMood === mood.type && styles.moodButtonSelected,
                         selectedMood === mood.type && { borderColor: mood.color },
                       ]}
@@ -1153,7 +1176,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   moodButton: {
-    width: (width - 80) / 3,
     aspectRatio: 1,
     backgroundColor: '#F8F9FD',
     borderRadius: 16,

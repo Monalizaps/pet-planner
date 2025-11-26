@@ -1,24 +1,32 @@
 {
   "expo": {
-    "name": "MiAuto Lembrete",
+    "name": "MiAuto",
     "slug": "miauto-lembrete",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "splash": {
+      "image": "./assets/logo-app.png",
       "resizeMode": "contain",
-      "backgroundColor": "#F5EFE6"
+      "backgroundColor": "#FAF7FF"
     },
-    "primaryColor": "#B8E6D5",
+    "primaryColor": "#B8A4E8",
+    "icon": "./assets/logo-app.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.miautolembrete.app",
-      "backgroundColor": "#F5EFE6"
+      "backgroundColor": "#FAF7FF"
     },
     "android": {
       "package": "com.miautolembrete.app",
+      "permissions": [
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#F5EFE6"
+        "foregroundImage": "./assets/logo-app.png",
+        "backgroundColor": "#FAF7FF"
       }
     },
     "web": {
@@ -26,8 +34,28 @@
       "output": "single"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo-app.png",
+          "color": "#B8A4E8",
+          "sounds": ["./assets/notification.wav"]
+        }
+      ]
     ],
-    "scheme": "petplanner"
+    "notification": {
+      "icon": "./assets/logo-app.png",
+      "color": "#B8A4E8",
+      "androidMode": "default",
+      "androidCollapsedTitle": "#{unread_notifications} notificações"
+    },
+    "scheme": "miauto",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "26a543b0-7bbb-4791-908a-9bbf34e41e09"
+      }
+    }
   }
 }

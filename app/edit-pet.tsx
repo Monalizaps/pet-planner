@@ -7,9 +7,6 @@ import {
   StyleSheet,
   Alert,
   Image,
-  ScrollView,
-  Platform,
-  KeyboardAvoidingView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,6 +15,7 @@ import { Pet } from './types';
 import { getPets, savePet } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './theme/colors';
+import { ResponsiveContainer } from './components/ResponsiveContainer';
 
 export default function EditPet() {
   const router = useRouter();
@@ -62,9 +60,8 @@ export default function EditPet() {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsEditing: true,
-      aspect: [1, 1],
       quality: 0.7,
     });
 
@@ -118,7 +115,7 @@ export default function EditPet() {
   }
 
   return (
-    <View style={styles.container}>
+    <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -127,14 +124,14 @@ export default function EditPet() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         {/* Foto do Pet */}
         <TouchableOpacity style={styles.imageContainer} onPress={pickImage}>
           {imageUri ? (
             <Image source={{ uri: imageUri }} style={styles.image} />
           ) : (
             <View style={styles.imagePlaceholder}>
-              <Ionicons name="camera" size={40} color="#6C63FF" />
+              <Ionicons name="camera" size={40} color="colors.primary" />
               <Text style={styles.imagePlaceholderText}>Alterar foto</Text>
             </View>
           )}
@@ -206,7 +203,7 @@ export default function EditPet() {
             style={styles.dateButton}
             onPress={() => setShowDatePicker(true)}
           >
-            <Ionicons name="calendar-outline" size={20} color="#6C63FF" />
+            <Ionicons name="calendar-outline" size={20} color="colors.primary" />
             <Text style={styles.dateButtonText}>
               {birthDate
                 ? birthDate.toLocaleDateString('pt-BR')
@@ -278,15 +275,15 @@ export default function EditPet() {
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
-      </ScrollView>
-    </View>
+      </View>
+    </ResponsiveContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FD',
+    backgroundColor: 'colors.background',
   },
   header: {
     flexDirection: 'row',
@@ -295,7 +292,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 60,
     paddingBottom: 20,
-    backgroundColor: '#6C63FF',
+    backgroundColor: 'colors.primary',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
@@ -319,22 +316,22 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     borderWidth: 4,
-    borderColor: '#6C63FF',
+    borderColor: 'colors.primary',
   },
   imagePlaceholder: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: '#E8E6FF',
+    backgroundColor: colors.secondary + '20',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#6C63FF',
+    borderColor: 'colors.primary',
     borderStyle: 'dashed',
   },
   imagePlaceholderText: {
     marginTop: 8,
-    color: '#6C63FF',
+    color: 'colors.primary',
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'Quicksand_600SemiBold',
@@ -343,7 +340,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 5,
     bottom: 5,
-    backgroundColor: '#6C63FF',
+    backgroundColor: 'colors.primary',
     width: 40,
     height: 40,
     borderRadius: 20,
@@ -370,7 +367,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_400Regular',
     color: '#333',
     borderWidth: 1,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
   },
   textArea: {
     height: 100,
@@ -388,11 +385,11 @@ const styles = StyleSheet.create({
     padding: 12,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
   },
   typeButtonSelected: {
-    borderColor: '#6C63FF',
-    backgroundColor: '#E8E6FF',
+    borderColor: 'colors.primary',
+    backgroundColor: colors.secondary + '20',
   },
   typeIcon: {
     fontSize: 32,
@@ -405,7 +402,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_600SemiBold',
   },
   typeLabelSelected: {
-    color: '#6C63FF',
+    color: 'colors.primary',
   },
   dateButton: {
     flexDirection: 'row',
@@ -414,7 +411,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#E8E6FF',
+    borderColor: colors.secondary + '20',
     gap: 12,
   },
   dateButtonText: {
@@ -428,14 +425,14 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flexDirection: 'row',
-    backgroundColor: '#6C63FF',
+    backgroundColor: 'colors.primary',
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
     gap: 8,
-    shadowColor: '#6C63FF',
+    shadowColor: 'colors.primary',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

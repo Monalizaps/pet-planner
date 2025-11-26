@@ -12,6 +12,7 @@ import {
   RefreshControl,
   Platform,
   KeyboardAvoidingView,
+  SafeAreaView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';

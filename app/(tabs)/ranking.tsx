@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, ScrollView, StyleSheet, Image, Dimensions, TouchableOpacity } from 'react-native';
 import { Text } from '../components/StyledText';
 import { MoodTrackerIcon } from '../components/PetIcons';
 import { MoodTracker } from '../components/MoodTracker';
 import { Pet } from '../types';
 import { getPets } from '../services/storage';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width } = Dimensions.get('window');
 
 export default function Ranking() {
   const [pets, setPets] = useState<Pet[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     loadPets();
@@ -43,9 +46,30 @@ export default function Ranking() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 90 }}
       >
-        <View style={styles.moodSection}>
-          <MoodTracker pets={pets} />
-        </View>
+        {pets.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Image
+              source={require('../../assets/pets1.png')}
+              style={styles.emptyImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.emptyTitle}>Nenhum pet cadastrado</Text>
+            <Text style={styles.emptyText}>
+              Adicione seu primeiro pet para começar a acompanhar o humor dele
+            </Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => router.push('/add-pet')}
+            >
+              <Ionicons name="add-circle" size={24} color="#fff" />
+              <Text style={styles.addButtonText}>Adicionar Pet</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.moodSection}>
+            <MoodTracker pets={pets} onMoodUpdated={loadPets} />
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -92,6 +116,52 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 40,
+    paddingTop: 60,
+  },
+  emptyImage: {
+    width: width * 0.6,
+    height: width * 0.45,
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 22,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D3436',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 15,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#636E72',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 32,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#B8A4E8',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    gap: 8,
+    shadowColor: '#B8A4E8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#fff',
   },
   moodSection: {
     paddingHorizontal: 20,

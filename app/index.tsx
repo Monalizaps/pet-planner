@@ -6,7 +6,7 @@ import {
   Image,
   StyleSheet,
   Alert,
-  Dimensions,
+  useWindowDimensions,
   Modal,
   TextInput,
   Linking,
@@ -25,8 +25,7 @@ import {
   validateTutorData,
   sanitizeString,
 } from './services/security';
-
-const { width } = Dimensions.get('window');
+import { colors } from './theme/colors';
 
 interface SocialPost {
   id: string;
@@ -64,6 +63,7 @@ LocaleConfig.defaultLocale = 'pt-br';
 
 export default function Home() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const [pets, setPets] = useState<Pet[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1131,7 +1131,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 8,
-    width: width * 0.7,
+    width: 280, // Tamanho fixo responsivo para a maioria dos celulares
     borderLeftWidth: 3,
     borderLeftColor: '#6C63FF',
   },

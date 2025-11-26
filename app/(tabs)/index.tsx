@@ -5,11 +5,11 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { Text } from '../components/StyledText';
 import { PetIcon, MoodIcon, PawIcon, CalendarIcon, BellIcon, TaskIcon } from '../components/PetIcons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Pet, Task, Tutor, MoodEntry, MoodType } from '../types';
 import { getPets, getTasks, getMoodEntries } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,10 +17,9 @@ import { secureRetrieve } from '../services/security';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, gradients } from '../theme/colors';
 
-const { width } = Dimensions.get('window');
-
 export default function Home() {
   const router = useRouter();
+  const { width } = useWindowDimensions();
   const [pets, setPets] = useState<Pet[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -29,6 +28,12 @@ export default function Home() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   const loadData = async () => {
     const petsData = await getPets();
@@ -428,16 +433,19 @@ const styles = StyleSheet.create({
   },
   catDecoration: {
     position: 'absolute',
-    bottom: width * -0.08,
-    right: width * 0.05,
-    width: width * 0.4,
-    height: width * 0.4,
+    bottom: -15,
+    right: 10,
+    width: 140,
+    height: 140,
     opacity: 0.95,
+    zIndex: -1,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    zIndex: 1,
+    paddingRight: 70,
   },
   profileButton: {
     width: 50,
@@ -537,8 +545,8 @@ const styles = StyleSheet.create({
     color: '#6C63FF',
   },
   emptyPetImage: {
-    width: width * 0.5,
-    height: width * 0.375,
+    width: 180,
+    height: 135,
     marginBottom: 20,
   },
   moodCard: {

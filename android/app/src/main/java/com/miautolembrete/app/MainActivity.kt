@@ -1,4 +1,4 @@
-package com.petplanner.app
+package com.miautolembrete.app
 
 import android.os.Build
 import android.os.Bundle

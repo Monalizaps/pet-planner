@@ -1,78 +1,106 @@
-import { Tabs } from 'expo-router';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { Slot, usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Text } from '../components/StyledText';
+import { colors } from '../theme/colors';
 
 export default function TabsLayout() {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const tabs = [
+    { name: 'index', label: 'Início', icon: 'home' as const, route: '/(tabs)/' },
+    { name: 'jornada', label: 'Rotina', icon: 'calendar' as const, route: '/(tabs)/jornada' },
+    { name: 'ranking', label: 'Humor', icon: 'happy' as const, route: '/(tabs)/ranking' },
+    { name: 'mais', label: 'Mais', icon: 'menu' as const, route: '/(tabs)/mais' },
+  ];
+
+  const isActive = (route: string) => {
+    if (route === '/(tabs)/') {
+      return pathname === '/';
+    }
+    return pathname.includes(route.replace('/(tabs)', ''));
+  };
+
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#6C63FF',
-        tabBarInactiveTintColor: '#999',
-        tabBarStyle: {
-          backgroundColor: '#fff',
-          borderTopWidth: 1,
-          borderTopColor: '#E8E6FF',
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 10,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          elevation: 10,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontFamily: 'Quicksand_600SemiBold',
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="paw" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="jornada"
-        options={{
-          title: 'Rotina',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="ranking"
-        options={{
-          title: 'Humor',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="happy" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="comunidade"
-        options={{
-          href: null,
-        }}
-      />
-      <Tabs.Screen
-        name="mais"
-        options={{
-          title: 'Perfil',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-circle" size={size} color={color} />
-          ),
-        }}
-      />
-    </Tabs>
+    <View style={styles.container}>
+      <View style={styles.content}>
+        <Slot />
+      </View>
+      
+      <View style={styles.tabBar}>
+        {tabs.map((tab) => {
+          const active = isActive(tab.route);
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              style={styles.tabButton}
+              onPress={() => router.push(tab.route as any)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconContainer, active && styles.iconContainerActive]}>
+                <Ionicons
+                  name={active ? tab.icon : `${tab.icon}-outline` as any}
+                  size={24}
+                  color={active ? '#6C63FF' : '#9E9E9E'}
+                />
+              </View>
+              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  content: {
+    flex: 1,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E8E8E8',
+    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
+    paddingTop: 8,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  tabButton: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 20,
+  },
+  iconContainerActive: {
+    backgroundColor: '#F0EDFF',
+  },
+  tabLabel: {
+    fontSize: 11,
+    color: '#9E9E9E',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  tabLabelActive: {
+    color: '#6C63FF',
+    fontWeight: '600',
+  },
+});

@@ -31,6 +31,7 @@ export interface Task {
   recurring?: 'daily' | 'weekly' | 'monthly';
   completed: boolean;
   notificationId?: string;
+  taskType?: 'medication' | 'feeding' | 'consultation' | 'grooming' | 'exercise' | 'other';
 }
 
 export type MoodType = 'feliz' | 'calmo' | 'ansioso' | 'triste' | 'irritado' | 'energetico';
@@ -39,6 +40,7 @@ export interface MoodSymptom {
   id: string;
   label: string;
   category: 'fisico' | 'comportamental';
+  isPositive?: boolean;
 }
 
 export interface MoodEntry {
@@ -61,4 +63,5 @@ export interface MoodAnalysis {
   alertLevel: 'normal' | 'atencao' | 'alerta';
   message: string;
   commonSymptoms: string[];
+  symptomScore?: number; // Ajuste do score baseado nos sintomas (-2 a +2)
 }

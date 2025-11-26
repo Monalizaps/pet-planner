@@ -9,6 +9,8 @@ import {
   TextInput,
   Image,
   Dimensions,
+  Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Text } from '../components/StyledText';
 import { PetIcon, CalendarIcon } from '../components/PetIcons';
@@ -44,6 +46,7 @@ export default function Jornada() {
   // Modals
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [showMedicationModal, setShowMedicationModal] = useState(false);
+  const [showQuickTaskModal, setShowQuickTaskModal] = useState(false);
   const [selectedPet, setSelectedPet] = useState<string>('');
   const [feedingInterval, setFeedingInterval] = useState('8');
   const [medicationInterval, setMedicationInterval] = useState('8');
@@ -53,6 +56,10 @@ export default function Jornada() {
   const [medicationStartTime, setMedicationStartTime] = useState('08:00');
   const [feedingStartTime, setFeedingStartTime] = useState('08:00');
   const [medicationDays, setMedicationDays] = useState('7');
+  const [quickTaskType, setQuickTaskType] = useState<'medication' | 'feeding' | 'consultation' | 'grooming' | 'exercise' | 'other'>('other');
+  const [quickTaskTitle, setQuickTaskTitle] = useState('');
+  const [quickTaskTime, setQuickTaskTime] = useState('09:00');
+  const [quickTaskDescription, setQuickTaskDescription] = useState('');
 
   useEffect(() => {
     loadData();
@@ -83,6 +90,74 @@ export default function Jornada() {
     return tasks.filter(
       (task) => task.dateTime.toISOString().split('T')[0] === dateStr
     );
+  };
+
+  const handleDatePress = (day: DateData) => {
+    const dateStr = day.dateString;
+    setSelectedDate(dateStr);
+    
+    const tasksOnDate = getTasksForDate(dateStr);
+    if (tasksOnDate.length === 0) {
+      // Sem tarefas nesta data, abrir modal de criação rápida
+      setShowQuickTaskModal(true);
+    }
+  };
+
+  const createQuickTask = async () => {
+    if (!selectedPet || !quickTaskTitle.trim()) {
+      Alert.alert('Erro', 'Selecione um pet e defina um título para a tarefa');
+      return;
+    }
+
+    const pet = pets.find(p => p.id === selectedPet);
+    if (!pet) return;
+
+    const [hour, minute] = quickTaskTime.split(':').map(Number);
+    const taskDate = new Date(selectedDate);
+    taskDate.setHours(hour, minute, 0, 0);
+
+    const taskIcons: { [key: string]: string } = {
+      medication: '💊',
+      feeding: '🍽️',
+      consultation: '🏥',
+      grooming: '✂️',
+      exercise: '🏃',
+      other: '📝',
+    };
+
+    const task: Task = {
+      id: Date.now().toString() + Math.random(),
+      petId: selectedPet,
+      title: `${taskIcons[quickTaskType]} ${quickTaskTitle} - ${pet.name}`,
+      description: quickTaskDescription.trim() || undefined,
+      dateTime: taskDate,
+      completed: false,
+      taskType: quickTaskType,
+    };
+
+    await saveTask(task);
+    
+    // Tentar agendar notificação (não funciona no Expo Go)
+    try {
+      await scheduleTaskNotification(task.id, task.title, task.dateTime);
+    } catch (error) {
+      console.log('Notificações não suportadas no Expo Go');
+    }
+
+    // Resetar formulário
+    setShowQuickTaskModal(false);
+    setQuickTaskType('other');
+    setQuickTaskTitle('');
+    setQuickTaskTime('09:00');
+    setQuickTaskDescription('');
+    setSelectedPet('');
+
+    Alert.alert(
+      '✅ Tarefa criada!', 
+      `${task.title} foi agendada com sucesso.\n\n⚠️ Notificações push não funcionam no Expo Go. Para receber notificações reais, é necessário gerar um build nativo do app.`,
+      [{ text: 'Entendi' }]
+    );
+    loadData();
   };
 
   const getPetIcon = (type: string) => {
@@ -163,8 +238,8 @@ export default function Jornada() {
     
     Alert.alert(
       '✅ Sucesso!',
-      `${tasksPerDay} horários de alimentação criados para ${pet.name}\n\nVocê receberá notificações nos horários agendados.`,
-      [{ text: 'OK', onPress: () => loadData() }]
+      `${tasksPerDay} horários de alimentação criados para ${pet.name}\n\n⚠️ Notificações push não funcionam no Expo Go. Verifique o calendário para acompanhar as tarefas.`,
+      [{ text: 'Entendi', onPress: () => loadData() }]
     );
   };
 
@@ -228,8 +303,8 @@ export default function Jornada() {
     
     Alert.alert(
       '✅ Sucesso!',
-      `${totalTasks} doses de ${medicationName} agendadas para ${pet.name}\n\nTratamento: ${days} dias (${tasksPerDay} doses/dia)\n\nMedicações aparecerão no calendário e você receberá notificações.`,
-      [{ text: 'OK', onPress: () => loadData() }]
+      `${totalTasks} doses de ${medicationName} agendadas para ${pet.name}\n\nTratamento: ${days} dias (${tasksPerDay} doses/dia)\n\n⚠️ Notificações push não funcionam no Expo Go. As medicações aparecerão no calendário.`,
+      [{ text: 'Entendi', onPress: () => loadData() }]
     );
   };
 
@@ -315,7 +390,7 @@ export default function Jornada() {
                 marked: markedDates[selectedDate]?.marked,
               },
             }}
-            onDayPress={(day: DateData) => setSelectedDate(day.dateString)}
+            onDayPress={handleDatePress}
             theme={{
               backgroundColor: '#FAFBFF',
               calendarBackground: '#FAFBFF',
@@ -489,82 +564,97 @@ export default function Jornada() {
         onRequestClose={() => setShowFeedingModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>🍽️ Agendar Alimentação</Text>
-              <TouchableOpacity onPress={() => setShowFeedingModal(false)}>
-                <Ionicons name="close" size={28} color="#666" />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalLabel}>Tipo de alimentação</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={feedingType}
-              onChangeText={setFeedingType}
-              placeholder="Ex: Ração, Comida caseira, Petisco..."
-              placeholderTextColor="#999"
-            />
-
-            <Text style={styles.modalLabel}>Selecione o pet</Text>
-            {pets.length === 0 ? (
-              <View style={styles.noPetsContainer}>
-                <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
-                <TouchableOpacity
-                  style={styles.addPetButton}
-                  onPress={() => {
-                    setShowFeedingModal(false);
-                    router.push('/add-pet');
-                  }}
-                >
-                  <Text style={styles.addPetButtonText}>+ Adicionar Pet</Text>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'flex-end' }}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>🍽️ Agendar Alimentação</Text>
+                <TouchableOpacity onPress={() => setShowFeedingModal(false)}>
+                  <Ionicons name="close" size={28} color="#666" />
                 </TouchableOpacity>
               </View>
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petScroll}>
-                {pets.map((pet) => (
-                  <TouchableOpacity
-                    key={pet.id}
-                    style={[
-                      styles.petOption,
-                      selectedPet === pet.id && styles.petOptionSelected,
-                    ]}
-                    onPress={() => setSelectedPet(pet.id)}
+
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
+                <Text style={styles.modalLabel}>Tipo de alimentação</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={feedingType}
+                  onChangeText={setFeedingType}
+                  placeholder="Ex: Ração, Comida caseira, Petisco..."
+                  placeholderTextColor="#999"
+                />
+
+                <Text style={styles.modalLabel}>Selecione o pet</Text>
+                {pets.length === 0 ? (
+                  <View style={styles.noPetsContainer}>
+                    <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
+                    <TouchableOpacity
+                      style={styles.addPetButton}
+                      onPress={() => {
+                        setShowFeedingModal(false);
+                        router.push('/add-pet');
+                      }}
+                    >
+                      <Text style={styles.addPetButtonText}>+ Adicionar Pet</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    style={styles.petScroll}
+                    contentContainerStyle={styles.petScrollContent}
                   >
-                    <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
-                    <Text style={styles.petOptionName}>{pet.name}</Text>
-                  </TouchableOpacity>
-                ))}
+                    {pets.map((pet) => (
+                      <TouchableOpacity
+                        key={pet.id}
+                        style={[
+                          styles.petOption,
+                          selectedPet === pet.id && styles.petOptionSelected,
+                        ]}
+                        onPress={() => setSelectedPet(pet.id)}
+                      >
+                        <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
+                        <Text style={styles.petOptionName}>{pet.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+
+                <Text style={styles.modalLabel}>Horário da primeira refeição</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={feedingStartTime}
+                  onChangeText={setFeedingStartTime}
+                  placeholder="Ex: 08:00"
+                  placeholderTextColor="#999"
+                  keyboardType="numbers-and-punctuation"
+                />
+
+                <Text style={styles.modalLabel}>A cada quantas horas?</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={feedingInterval}
+                  onChangeText={setFeedingInterval}
+                  keyboardType="number-pad"
+                  placeholder="Ex: 8"
+                  placeholderTextColor="#999"
+                />
+                <Text style={styles.modalHint}>
+                  {feedingInterval ? `${Math.floor(24 / parseInt(feedingInterval))} refeições por dia` : ''}
+                </Text>
+
+                <TouchableOpacity style={styles.modalButton} onPress={createFeedingTasks}>
+                  <Text style={styles.modalButtonText}>Criar Horários nas Tarefas</Text>
+                </TouchableOpacity>
               </ScrollView>
-            )}
-
-            <Text style={styles.modalLabel}>Horário da primeira refeição</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={feedingStartTime}
-              onChangeText={setFeedingStartTime}
-              placeholder="Ex: 08:00"
-              placeholderTextColor="#999"
-              keyboardType="numbers-and-punctuation"
-            />
-
-            <Text style={styles.modalLabel}>A cada quantas horas?</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={feedingInterval}
-              onChangeText={setFeedingInterval}
-              keyboardType="number-pad"
-              placeholder="Ex: 8"
-              placeholderTextColor="#999"
-            />
-            <Text style={styles.modalHint}>
-              {feedingInterval ? `${Math.floor(24 / parseInt(feedingInterval))} refeições por dia` : ''}
-            </Text>
-
-            <TouchableOpacity style={styles.modalButton} onPress={createFeedingTasks}>
-              <Text style={styles.modalButtonText}>Criar Horários nas Tarefas</Text>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
 
@@ -576,108 +666,255 @@ export default function Jornada() {
         onRequestClose={() => setShowMedicationModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>💊 Agendar Medicação</Text>
-              <TouchableOpacity onPress={() => setShowMedicationModal(false)}>
-                <Ionicons name="close" size={28} color="#666" />
-              </TouchableOpacity>
-            </View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, justifyContent: 'flex-end' }}
+          >
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>💊 Agendar Medicação</Text>
+                <TouchableOpacity onPress={() => setShowMedicationModal(false)}>
+                  <Ionicons name="close" size={28} color="#666" />
+                </TouchableOpacity>
+              </View>
 
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={styles.modalLabel}>Nome da medicação</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={medicationName}
-                onChangeText={setMedicationName}
-                placeholder="Ex: Antibiótico, Vermífugo, Anti-inflamatório..."
-                placeholderTextColor="#999"
-              />
+              <ScrollView 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 20 }}
+              >
+                <Text style={styles.modalLabel}>Nome da medicação</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={medicationName}
+                  onChangeText={setMedicationName}
+                  placeholder="Ex: Antibiótico, Vermífugo, Anti-inflamatório..."
+                  placeholderTextColor="#999"
+                />
 
-              <Text style={styles.modalLabel}>Dosagem</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={medicationDosage}
-                onChangeText={setMedicationDosage}
-                placeholder="Ex: 1 comprimido, 5ml, 2 gotas..."
-                placeholderTextColor="#999"
-              />
+                <Text style={styles.modalLabel}>Dosagem</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={medicationDosage}
+                  onChangeText={setMedicationDosage}
+                  placeholder="Ex: 1 comprimido, 5ml, 2 gotas..."
+                  placeholderTextColor="#999"
+                />
 
-              <Text style={styles.modalLabel}>Selecione o pet</Text>
-              {pets.length === 0 ? (
-                <View style={styles.noPetsContainer}>
-                  <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
-                  <TouchableOpacity
-                    style={styles.addPetButton}
-                    onPress={() => {
-                      setShowMedicationModal(false);
-                      router.push('/add-pet');
-                    }}
-                  >
-                    <Text style={styles.addPetButtonText}>+ Adicionar Pet</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petScroll}>
-                  {pets.map((pet) => (
+                <Text style={styles.modalLabel}>Selecione o pet</Text>
+                {pets.length === 0 ? (
+                  <View style={styles.noPetsContainer}>
+                    <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
                     <TouchableOpacity
-                      key={pet.id}
-                      style={[
-                        styles.petOption,
-                        selectedPet === pet.id && styles.petOptionSelected,
-                      ]}
-                      onPress={() => setSelectedPet(pet.id)}
+                      style={styles.addPetButton}
+                      onPress={() => {
+                        setShowMedicationModal(false);
+                        router.push('/add-pet');
+                      }}
                     >
-                      <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
-                      <Text style={styles.petOptionName}>{pet.name}</Text>
+                      <Text style={styles.addPetButtonText}>+ Adicionar Pet</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false} 
+                    style={styles.petScroll}
+                    contentContainerStyle={styles.petScrollContent}
+                  >
+                    {pets.map((pet) => (
+                      <TouchableOpacity
+                        key={pet.id}
+                        style={[
+                          styles.petOption,
+                          selectedPet === pet.id && styles.petOptionSelected,
+                        ]}
+                        onPress={() => setSelectedPet(pet.id)}
+                      >
+                        <Text style={styles.petOptionIcon}>{pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}</Text>
+                        <Text style={styles.petOptionName}>{pet.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
+
+                <Text style={styles.modalLabel}>Horário da primeira dose</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={medicationStartTime}
+                  onChangeText={setMedicationStartTime}
+                  placeholder="Ex: 08:00"
+                  placeholderTextColor="#999"
+                  keyboardType="numbers-and-punctuation"
+                />
+
+                <Text style={styles.modalLabel}>A cada quantas horas?</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={medicationInterval}
+                  onChangeText={setMedicationInterval}
+                  keyboardType="number-pad"
+                  placeholder="Ex: 8"
+                  placeholderTextColor="#999"
+                />
+                <Text style={styles.modalHint}>
+                  {medicationInterval ? `${Math.floor(24 / parseInt(medicationInterval))} doses por dia` : ''}
+                </Text>
+
+                <Text style={styles.modalLabel}>Por quantos dias?</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={medicationDays}
+                  onChangeText={setMedicationDays}
+                  keyboardType="number-pad"
+                  placeholder="Ex: 7"
+                  placeholderTextColor="#999"
+                />
+                <Text style={styles.modalHint}>
+                  {medicationInterval && medicationDays 
+                    ? `Total: ${Math.floor(24 / parseInt(medicationInterval)) * parseInt(medicationDays)} doses` 
+                    : ''}
+                </Text>
+
+                <TouchableOpacity style={styles.modalButton} onPress={createMedicationTasks}>
+                  <Text style={styles.modalButtonText}>Adicionar no Calendário</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
+
+      {/* Modal de Criação Rápida de Tarefa */}
+      <Modal
+        visible={showQuickTaskModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowQuickTaskModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>➕ Nova Tarefa</Text>
+                <TouchableOpacity onPress={() => setShowQuickTaskModal(false)}>
+                  <Ionicons name="close" size={28} color="#999" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {/* Tipo de Tarefa */}
+                <Text style={styles.modalLabel}>Tipo de Tarefa</Text>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={{ marginBottom: 16 }}
+                >
+                  {[
+                    { type: 'medication' as const, icon: '💊', label: 'Medicação' },
+                    { type: 'feeding' as const, icon: '🍽️', label: 'Refeição' },
+                    { type: 'consultation' as const, icon: '🏥', label: 'Consulta' },
+                    { type: 'grooming' as const, icon: '✂️', label: 'Banho/Tosa' },
+                    { type: 'exercise' as const, icon: '🏃', label: 'Exercício' },
+                    { type: 'other' as const, icon: '📝', label: 'Outro' },
+                  ].map((item) => (
+                    <TouchableOpacity
+                      key={item.type}
+                      style={[
+                        styles.taskTypeOption,
+                        quickTaskType === item.type && styles.taskTypeOptionSelected,
+                      ]}
+                      onPress={() => setQuickTaskType(item.type)}
+                    >
+                      <Text style={styles.taskTypeIcon}>{item.icon}</Text>
+                      <Text style={[
+                        styles.taskTypeLabel,
+                        quickTaskType === item.type && styles.taskTypeLabelSelected,
+                      ]}>
+                        {item.label}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
-              )}
 
-              <Text style={styles.modalLabel}>Horário da primeira dose</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={medicationStartTime}
-                onChangeText={setMedicationStartTime}
-                placeholder="Ex: 08:00"
-                placeholderTextColor="#999"
-                keyboardType="numbers-and-punctuation"
-              />
+                {/* Selecionar Pet */}
+                <Text style={styles.modalLabel}>Selecione o Pet</Text>
+                {pets.length === 0 ? (
+                  <View style={styles.noPetsContainer}>
+                    <Text style={styles.noPetsText}>Você ainda não cadastrou nenhum pet</Text>
+                    <TouchableOpacity
+                      style={styles.addPetButton}
+                      onPress={() => {
+                        setShowQuickTaskModal(false);
+                        router.push('/add-pet');
+                      }}
+                    >
+                      <Text style={styles.addPetButtonText}>+ Adicionar Pet</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.petScroll}
+                    contentContainerStyle={styles.petScrollContent}
+                  >
+                    {pets.map((pet) => (
+                      <TouchableOpacity
+                        key={pet.id}
+                        style={[
+                          styles.petOption,
+                          selectedPet === pet.id && styles.petOptionSelected,
+                        ]}
+                        onPress={() => setSelectedPet(pet.id)}
+                      >
+                        <Text style={styles.petOptionIcon}>
+                          {pet.type === 'dog' ? '🐶' : pet.type === 'cat' ? '🐱' : pet.type === 'bird' ? '🦜' : '🐾'}
+                        </Text>
+                        <Text style={styles.petOptionName}>{pet.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                )}
 
-              <Text style={styles.modalLabel}>A cada quantas horas?</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={medicationInterval}
-                onChangeText={setMedicationInterval}
-                keyboardType="number-pad"
-                placeholder="Ex: 8"
-                placeholderTextColor="#999"
-              />
-              <Text style={styles.modalHint}>
-                {medicationInterval ? `${Math.floor(24 / parseInt(medicationInterval))} doses por dia` : ''}
-              </Text>
+                {/* Título da Tarefa */}
+                <Text style={styles.modalLabel}>Título *</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={quickTaskTitle}
+                  onChangeText={setQuickTaskTitle}
+                  placeholder="Ex: Vermífugo, Ração da manhã, Consulta Dr. João..."
+                  placeholderTextColor="#999"
+                />
 
-              <Text style={styles.modalLabel}>Por quantos dias?</Text>
-              <TextInput
-                style={styles.modalInput}
-                value={medicationDays}
-                onChangeText={setMedicationDays}
-                keyboardType="number-pad"
-                placeholder="Ex: 7"
-                placeholderTextColor="#999"
-              />
-              <Text style={styles.modalHint}>
-                {medicationInterval && medicationDays 
-                  ? `Total: ${Math.floor(24 / parseInt(medicationInterval)) * parseInt(medicationDays)} doses` 
-                  : ''}
-              </Text>
+                {/* Horário */}
+                <Text style={styles.modalLabel}>Horário</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={quickTaskTime}
+                  onChangeText={setQuickTaskTime}
+                  placeholder="Ex: 09:00"
+                  placeholderTextColor="#999"
+                  keyboardType="numbers-and-punctuation"
+                />
 
-              <TouchableOpacity style={styles.modalButton} onPress={createMedicationTasks}>
-                <Text style={styles.modalButtonText}>Adicionar no Calendário</Text>
-              </TouchableOpacity>
-            </ScrollView>
-          </View>
+                {/* Descrição (Opcional) */}
+                <Text style={styles.modalLabel}>Observações (opcional)</Text>
+                <TextInput
+                  style={[styles.modalInput, { height: 80, textAlignVertical: 'top' }]}
+                  value={quickTaskDescription}
+                  onChangeText={setQuickTaskDescription}
+                  placeholder="Ex: 1 comprimido com comida, Levar carteirinha de vacinação..."
+                  placeholderTextColor="#999"
+                  multiline
+                  numberOfLines={4}
+                />
+
+                <TouchableOpacity style={styles.modalButton} onPress={createQuickTask}>
+                  <Text style={styles.modalButtonText}>Criar Tarefa</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </View>
@@ -902,40 +1139,49 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
-    padding: 24,
-    paddingBottom: 40,
-    maxHeight: '80%',
+    padding: 20,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+    maxHeight: '85%',
+    minHeight: '50%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'Quicksand_700Bold',
     color: '#2D3748',
+    flex: 1,
   },
   modalLabel: {
     fontSize: 14,
     fontFamily: 'Quicksand_600SemiBold',
     color: '#2D3748',
-    marginTop: 16,
+    marginTop: 12,
     marginBottom: 8,
   },
   petScroll: {
     marginBottom: 8,
-    maxHeight: 100,
+    maxHeight: 90,
+  },
+  petScrollContent: {
+    paddingVertical: 4,
+    alignItems: 'center',
   },
   petOption: {
     alignItems: 'center',
-    padding: 12,
-    marginRight: 12,
+    justifyContent: 'center',
+    padding: 10,
+    marginRight: 10,
     borderRadius: 12,
     backgroundColor: '#F8F9FD',
     borderWidth: 2,
     borderColor: 'transparent',
+    minWidth: 80,
+    height: 80,
   },
   petOptionSelected: {
     backgroundColor: '#E8E6FF',
@@ -1007,5 +1253,59 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Quicksand_700Bold',
     color: '#fff',
+  },
+  taskTypeOption: {
+    alignItems: 'center',
+    padding: 12,
+    marginRight: 10,
+    borderRadius: 12,
+    backgroundColor: '#F8F9FD',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    minWidth: 90,
+  },
+  taskTypeOptionSelected: {
+    backgroundColor: '#E8E6FF',
+    borderColor: '#6C63FF',
+  },
+  taskTypeIcon: {
+    fontSize: 28,
+    marginBottom: 4,
+  },
+  taskTypeLabel: {
+    fontSize: 11,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#666',
+    textAlign: 'center',
+  },
+  taskTypeLabelSelected: {
+    color: '#6C63FF',
+  },
+  notificationBanner: {
+    backgroundColor: '#FFF4E6',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 20,
+    marginBottom: 10,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+  },
+  notificationBannerIcon: {
+    marginTop: 2,
+  },
+  notificationBannerTitle: {
+    fontSize: 14,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#E65100',
+    marginBottom: 4,
+  },
+  notificationBannerText: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#F57C00',
+    lineHeight: 18,
   },
 });

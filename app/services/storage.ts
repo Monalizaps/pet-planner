@@ -223,22 +223,34 @@ export async function toggleTaskCompletion(taskId: string): Promise<void> {
 const MOODS_KEY = '@pet_planner_moods';
 
 export const AVAILABLE_SYMPTOMS: MoodSymptom[] = [
-  // Físicos
-  { id: 'sem_apetite', label: 'Sem apetite', category: 'fisico' },
-  { id: 'muito_apetite', label: 'Muito apetite', category: 'fisico' },
-  { id: 'vomito', label: 'Vômito', category: 'fisico' },
-  { id: 'diarreia', label: 'Diarreia', category: 'fisico' },
-  { id: 'letargia', label: 'Letargia/Cansaço', category: 'fisico' },
-  { id: 'tremores', label: 'Tremores', category: 'fisico' },
-  { id: 'coceira', label: 'Coceira excessiva', category: 'fisico' },
+  // Físicos Positivos
+  { id: 'apetite_normal', label: '✅ Apetite normal', category: 'fisico', isPositive: true },
+  { id: 'pelagem_brilhante', label: '✅ Pelagem brilhante', category: 'fisico', isPositive: true },
+  { id: 'energetico', label: '✅ Energético e ativo', category: 'fisico', isPositive: true },
+  { id: 'hidratado', label: '✅ Bem hidratado', category: 'fisico', isPositive: true },
   
-  // Comportamentais
-  { id: 'agressivo', label: 'Agressividade', category: 'comportamental' },
-  { id: 'isolamento', label: 'Isolamento', category: 'comportamental' },
-  { id: 'destrutivo', label: 'Comportamento destrutivo', category: 'comportamental' },
-  { id: 'muito_vocal', label: 'Muito vocal (miados/latidos)', category: 'comportamental' },
-  { id: 'hiperativo', label: 'Hiperatividade', category: 'comportamental' },
-  { id: 'nao_brinca', label: 'Não quer brincar', category: 'comportamental' },
+  // Físicos Negativos
+  { id: 'sem_apetite', label: '❌ Sem apetite', category: 'fisico', isPositive: false },
+  { id: 'muito_apetite', label: '❌ Apetite excessivo', category: 'fisico', isPositive: false },
+  { id: 'vomito', label: '❌ Vômito', category: 'fisico', isPositive: false },
+  { id: 'diarreia', label: '❌ Diarreia', category: 'fisico', isPositive: false },
+  { id: 'letargia', label: '❌ Letargia/Cansaço', category: 'fisico', isPositive: false },
+  { id: 'tremores', label: '❌ Tremores', category: 'fisico', isPositive: false },
+  { id: 'coceira', label: '❌ Coceira excessiva', category: 'fisico', isPositive: false },
+  
+  // Comportamentais Positivos
+  { id: 'brincalhao', label: '✅ Brincalhão', category: 'comportamental', isPositive: true },
+  { id: 'socivel', label: '✅ Sociável', category: 'comportamental', isPositive: true },
+  { id: 'calmo_equilibrado', label: '✅ Calmo e equilibrado', category: 'comportamental', isPositive: true },
+  { id: 'obediente', label: '✅ Obediente', category: 'comportamental', isPositive: true },
+  
+  // Comportamentais Negativos
+  { id: 'agressivo', label: '❌ Agressividade', category: 'comportamental', isPositive: false },
+  { id: 'isolamento', label: '❌ Isolamento', category: 'comportamental', isPositive: false },
+  { id: 'destrutivo', label: '❌ Comportamento destrutivo', category: 'comportamental', isPositive: false },
+  { id: 'muito_vocal', label: '❌ Muito vocal (miados/latidos)', category: 'comportamental', isPositive: false },
+  { id: 'hiperativo', label: '❌ Hiperatividade', category: 'comportamental', isPositive: false },
+  { id: 'nao_brinca', label: '❌ Não quer brincar', category: 'comportamental', isPositive: false },
 ];
 
 export async function getMoodEntries(petId?: string): Promise<MoodEntry[]> {
@@ -331,6 +343,32 @@ export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
     .slice(0, 3)
     .map(([id]) => AVAILABLE_SYMPTOMS.find(s => s.id === id)?.label || id);
   
+  // Calcular ajuste de score baseado em sintomas
+  let symptomScore = 0;
+  let positiveSymptomCount = 0;
+  let negativeSymptomCount = 0;
+  
+  currentMonthEntries.forEach(entry => {
+    entry.symptoms.forEach(symptomId => {
+      const symptom = AVAILABLE_SYMPTOMS.find(s => s.id === symptomId);
+      if (symptom) {
+        if (symptom.isPositive) {
+          positiveSymptomCount++;
+        } else if (symptom.isPositive === false) {
+          negativeSymptomCount++;
+        }
+      }
+    });
+  });
+  
+  // Cada sintoma positivo adiciona +0.5, negativo -0.5 (máximo ±2)
+  if (currentMonthEntries.length > 0) {
+    const avgPositive = positiveSymptomCount / currentMonthEntries.length;
+    const avgNegative = negativeSymptomCount / currentMonthEntries.length;
+    symptomScore = (avgPositive * 0.5) - (avgNegative * 0.5);
+    symptomScore = Math.max(-2, Math.min(2, symptomScore));
+  }
+  
   // Análise de alerta
   const negativeCount = currentMonth.ansioso + currentMonth.triste + currentMonth.irritado;
   const positiveCount = currentMonth.feliz + currentMonth.calmo + currentMonth.energetico;
@@ -363,5 +401,6 @@ export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
     alertLevel,
     message,
     commonSymptoms,
+    symptomScore,
   };
 }
