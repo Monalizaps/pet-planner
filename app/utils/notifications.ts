@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Alert } from 'react-native';
 
 // Função para carregar configurações
 async function getNotificationSettings() {
@@ -48,14 +49,21 @@ export async function registerForPushNotificationsAsync() {
   const settings = await getNotificationSettings();
   
   if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('default', {
-      name: 'Tarefas Pet Planner',
+    // Criar canal de notificação com configurações corretas
+    await Notifications.setNotificationChannelAsync('pet-planner-tasks', {
+      name: 'Lembretes de Tarefas',
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: settings.vibrationEnabled ? [0, 250, 250, 250] : [0],
-      lightColor: '#6C63FF',
+      vibrationPattern: settings.vibrationEnabled ? [0, 250, 250, 250] : undefined,
+      lightColor: '#B8A4E8',
       sound: settings.soundEnabled ? 'default' : undefined,
       enableVibrate: settings.vibrationEnabled,
+      enableLights: true,
+      lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+      bypassDnd: true,
+      showBadge: true,
     });
+    
+    console.log('✅ Canal de notificação configurado: pet-planner-tasks');
   }
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -68,16 +76,56 @@ export async function registerForPushNotificationsAsync() {
         allowBadge: true,
         allowSound: settings.soundEnabled,
       },
+      android: {
+        allowAlert: true,
+        allowBadge: true,
+        allowSound: settings.soundEnabled,
+      },
     });
     finalStatus = status;
   }
 
   if (finalStatus !== 'granted') {
-    console.log('Failed to get push token for push notification!');
+    console.log('❌ Permissão de notificação negada!');
     return false;
   }
 
+  console.log('✅ Permissão de notificação concedida!');
   return true;
+}
+
+// Função para verificar e solicitar permissão de alarme exato (Android 12+)
+export async function checkExactAlarmPermission(): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return true;
+  }
+
+  try {
+    // No Android 12+ (API 31+), apps precisam de permissão especial para alarmes exatos
+    if (Platform.Version >= 31) {
+      // Podemos verificar através de um módulo nativo ou simplesmente informar o usuário
+      Alert.alert(
+        'Permissão Necessária',
+        'Para que os lembretes funcionem corretamente, você precisa permitir "Alarmes e lembretes" nas configurações do app.',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Abrir Configurações',
+            onPress: () => {
+              Linking.openSettings();
+            },
+          },
+        ]
+      );
+    }
+    return true;
+  } catch (error) {
+    console.log('Erro ao verificar permissão de alarme:', error);
+    return true;
+  }
 }
 
 export async function scheduleTaskNotification(
@@ -164,12 +212,18 @@ export async function scheduleTaskNotification(
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🐾 Pet Planner',
+        title: '🐾 Pet Planner - Lembrete',
         body: taskTitle,
         data: { taskId },
         sound: settings.soundEnabled ? 'default' : false,
-        priority: Notifications.AndroidNotificationPriority.HIGH,
+        priority: Notifications.AndroidNotificationPriority.MAX,
         vibrate: settings.vibrationEnabled ? [0, 250, 250, 250] : [0],
+        badge: 1,
+        autoDismiss: false,
+        sticky: false,
+        ...(Platform.OS === 'android' && {
+          channelId: 'pet-planner-tasks',
+        }),
       },
       trigger,
     });
@@ -195,4 +249,44 @@ export async function scheduleTaskNotification(
 
 export async function cancelTaskNotification(notificationId: string) {
   await Notifications.cancelScheduledNotificationAsync(notificationId);
+}
+
+// Função de teste para notificação imediata
+export async function testNotification() {
+  try {
+    console.log('🧪 [TESTE] Enviando notificação de teste...');
+    
+    // Verificar permissões
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      console.log('❌ [TESTE] Sem permissão');
+      Alert.alert('Erro', 'Permissão de notificação não concedida');
+      return;
+    }
+
+    // Enviar notificação imediata
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: '🧪 Teste de Notificação',
+        body: 'Se você viu isso, as notificações estão funcionando! ✅',
+        data: { test: true },
+        sound: 'default',
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        vibrate: [0, 250, 250, 250],
+        badge: 1,
+        ...(Platform.OS === 'android' && {
+          channelId: 'pet-planner-tasks',
+        }),
+      },
+      trigger: {
+        seconds: 2,
+      },
+    });
+
+    console.log('✅ [TESTE] Notificação agendada para 2 segundos');
+    Alert.alert('Sucesso', 'Notificação de teste agendada! Você receberá em 2 segundos.');
+  } catch (error) {
+    console.log('❌ [TESTE] Erro:', error);
+    Alert.alert('Erro', 'Falha ao enviar notificação de teste: ' + error);
+  }
 }

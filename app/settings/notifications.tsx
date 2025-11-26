@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import { testNotification, checkExactAlarmPermission } from '../utils/notifications';
 
 export default function NotificationsSettings() {
   const router = useRouter();
@@ -44,14 +45,17 @@ export default function NotificationsSettings() {
       
       // Recriar canal do Android com novas configurações
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.HIGH,
-          vibrationPattern: newSettings.vibrationEnabled ? [0, 250, 250, 250] : [0],
+        await Notifications.setNotificationChannelAsync('pet-planner-tasks', {
+          name: 'Lembretes de Tarefas',
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: newSettings.vibrationEnabled ? [0, 250, 250, 250] : undefined,
           sound: newSettings.soundEnabled ? 'default' : undefined,
           enableVibrate: newSettings.vibrationEnabled,
           enableLights: true,
-          lightColor: '#6C63FF',
+          lightColor: '#B8A4E8',
+          lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
+          bypassDnd: true,
+          showBadge: true,
         });
       }
     } catch (error) {
@@ -192,6 +196,20 @@ export default function NotificationsSettings() {
             Configure os lembretes de acordo com suas preferências.
           </Text>
         </View>
+
+        {/* Test Notification Button */}
+        <TouchableOpacity 
+          style={styles.testButton}
+          onPress={async () => {
+            await testNotification();
+            if (Platform.OS === 'android' && Platform.Version >= 31) {
+              await checkExactAlarmPermission();
+            }
+          }}
+        >
+          <Ionicons name="flask-outline" size={22} color="#fff" />
+          <Text style={styles.testButtonText}>Testar Notificação</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -307,5 +325,25 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_400Regular',
     color: '#2D5016',
     lineHeight: 20,
+  },
+  testButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#6C63FF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 8,
+    gap: 8,
+    shadowColor: '#6C63FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  testButtonText: {
+    fontSize: 16,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#fff',
   },
 });
