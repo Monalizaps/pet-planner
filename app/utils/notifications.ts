@@ -2,6 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
+import { getTasks } from '../services/storage';
 
 // Função para carregar configurações
 async function getNotificationSettings() {
@@ -47,6 +48,8 @@ Notifications.setNotificationHandler({
 
 export async function registerForPushNotificationsAsync() {
   const settings = await getNotificationSettings();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  console.log(`🌍 [NOTIFICAÇÃO] Timezone atual: ${tz}`);
   
   if (Platform.OS === 'android') {
     // Criar canal de notificação com configurações corretas
@@ -94,6 +97,34 @@ export async function registerForPushNotificationsAsync() {
   return true;
 }
 
+// Reagendar tarefas futuras ao iniciar o app (fallback para REBOOT)
+export async function rehydrateScheduledNotifications() {
+  try {
+    console.log('🔄 [NOTIFICAÇÃO] Rehidratando agendamentos...');
+    const tasks = await getTasks();
+    const now = new Date();
+    let count = 0;
+
+    for (const t of tasks) {
+      if (!t.dateTime || t.completed) continue;
+      const dt = new Date(t.dateTime);
+      // apenas próximas 30 dias
+      const inWindow = dt > now && dt.getTime() - now.getTime() < 30 * 24 * 60 * 60 * 1000;
+      if (!inWindow) continue;
+
+      // Se não tiver notificationId salvo, tentar agendar
+      if (!t.notificationId) {
+        console.log(`➡️ [NOTIFICAÇÃO] Reagendando tarefa ${t.id} para ${dt.toISOString()}`);
+        await scheduleTaskNotification(t.id, t.title, dt, t.recurring);
+        count++;
+      }
+    }
+    console.log(`✅ [NOTIFICAÇÃO] Reagendamentos aplicados: ${count}`);
+  } catch (error) {
+    console.log('❌ [NOTIFICAÇÃO] Erro ao rehidratar:', error);
+  }
+}
+
 // Função para verificar e solicitar permissão de alarme exato (Android 12+)
 export async function checkExactAlarmPermission(): Promise<boolean> {
   if (Platform.OS !== 'android') {
@@ -135,6 +166,7 @@ export async function scheduleTaskNotification(
   recurring?: 'daily' | 'weekly' | 'monthly'
 ) {
   try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     console.log('🔔 [NOTIFICAÇÃO] Iniciando agendamento...');
     
     // Verificar se notificações de tarefas estão habilitadas
@@ -165,56 +197,55 @@ export async function scheduleTaskNotification(
     }
 
     const now = new Date();
-    console.log('⏰ [NOTIFICAÇÃO] Agora:', now.toLocaleString('pt-BR'));
-    console.log('⏰ [NOTIFICAÇÃO] Agendado para:', dateTime.toLocaleString('pt-BR'));
+    console.log('🕒 [NOTIFICAÇÃO] Agora:', now.toISOString(), 'TZ:', tz);
+    console.log('📅 [NOTIFICAÇÃO] Agendado para:', new Date(dateTime).toISOString(), 'TZ:', tz);
     
-    if (dateTime <= now && !recurring) {
-      console.log('❌ [NOTIFICAÇÃO] Data no passado, cancelando');
-      return null;
-    }
-
     let trigger: any;
 
     if (recurring) {
-      trigger = {
-        repeats: true,
-      };
-
-      if (recurring === 'daily') {
-        trigger.hour = dateTime.getHours();
-        trigger.minute = dateTime.getMinutes();
-      } else if (recurring === 'weekly') {
-        trigger.weekday = dateTime.getDay() === 0 ? 1 : dateTime.getDay() + 1;
-        trigger.hour = dateTime.getHours();
-        trigger.minute = dateTime.getMinutes();
-      } else if (recurring === 'monthly') {
-        trigger.day = dateTime.getDate();
-        trigger.hour = dateTime.getHours();
-        trigger.minute = dateTime.getMinutes();
-      }
-      console.log('🔄 [NOTIFICAÇÃO] Trigger recorrente:', JSON.stringify(trigger));
-    } else {
+      // IMPORTANTE: Android tem problemas com triggers recorrentes hour/minute
+      // Solução: usar DATE trigger para TODAS as notificações recorrentes
       const triggerDate = new Date(dateTime);
-      const secondsFromNow = Math.floor((triggerDate.getTime() - now.getTime()) / 1000);
+      const isToday = triggerDate.toDateString() === now.toDateString();
       
-      console.log(`⏱️ [NOTIFICAÇÃO] Será disparada em ${secondsFromNow} segundos (${Math.floor(secondsFromNow / 60)} minutos)`);
+      if (isToday && triggerDate <= now) {
+        // Se a hora de hoje já passou, agendar para amanhã
+        console.log('⚠️ [NOTIFICAÇÃO] Hora já passou hoje, agendando para amanhã');
+        triggerDate.setDate(triggerDate.getDate() + 1);
+      }
+
+      // SEMPRE usar DATE trigger, mesmo para recorrentes
+      // A recorrência será tratada recriando a notificação após cada disparo
+      trigger = {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+      } as Notifications.DateTriggerInput;
       
-      if (secondsFromNow < 1) {
-        console.log('❌ [NOTIFICAÇÃO] Tempo insuficiente, cancelando');
+      console.log('🔄 [NOTIFICAÇÃO] Trigger recorrente (' + recurring.toUpperCase() + ') usando DATE:', triggerDate.toISOString());
+      console.log('⏰ [NOTIFICAÇÃO] Primeira ocorrência em:', triggerDate.toLocaleString('pt-BR'));
+    } else {
+      // Notificação única - usar gatilho por DATA absoluta para compatibilidade iOS/Android
+      const triggerDate = new Date(dateTime);
+      console.log('📅 [NOTIFICAÇÃO] Data alvo:', triggerDate.toISOString(), 'TZ:', tz);
+      if (triggerDate <= now) {
+        console.log('❌ [NOTIFICAÇÃO] Data no passado, cancelando');
         return null;
       }
-
       trigger = {
-        seconds: secondsFromNow,
-      };
-      console.log('⏰ [NOTIFICAÇÃO] Trigger:', JSON.stringify(trigger));
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+      } as Notifications.DateTriggerInput;
+      console.log('⏰ [NOTIFICAÇÃO] Trigger (DATE):', triggerDate.toISOString());
     }
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
         title: '🐾 Pet Planner - Lembrete',
         body: taskTitle,
-        data: { taskId },
+        data: { 
+          taskId,
+          recurring: recurring || null,  // Guardar tipo de recorrência para reagendar
+        },
         sound: settings.soundEnabled ? 'default' : false,
         priority: Notifications.AndroidNotificationPriority.MAX,
         vibrate: settings.vibrationEnabled ? [0, 250, 250, 250] : [0],
@@ -265,6 +296,8 @@ export async function testNotification() {
     }
 
     // Enviar notificação imediata
+    // Usar gatilho por DATA em 5 segundos (mais consistente que intervalos curtos)
+    const fireDate = new Date(Date.now() + 5000);
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🧪 Teste de Notificação',
@@ -279,14 +312,33 @@ export async function testNotification() {
         }),
       },
       trigger: {
-        seconds: 2,
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: fireDate,
       },
     });
 
-    console.log('✅ [TESTE] Notificação agendada para 2 segundos');
-    Alert.alert('Sucesso', 'Notificação de teste agendada! Você receberá em 2 segundos.');
+    console.log('✅ [TESTE] Notificação agendada para', fireDate.toISOString());
+    Alert.alert('Sucesso', 'Notificação de teste agendada para ~5 segundos.');
   } catch (error) {
     console.log('❌ [TESTE] Erro:', error);
     Alert.alert('Erro', 'Falha ao enviar notificação de teste: ' + error);
+  }
+}
+
+// Listar notificações programadas para debug
+export async function debugScheduledNotifications() {
+  try {
+    const list = await Notifications.getAllScheduledNotificationsAsync();
+    console.log(`🗂️ [DEBUG] Total programadas: ${list.length}`);
+    for (const n of list) {
+      console.log('🗓️ [DEBUG] Notificação:', {
+        id: n.identifier,
+        trigger: n.trigger,
+        title: n.request.content.title,
+      });
+    }
+    Alert.alert('Fila', `Total programadas: ${list.length}`);
+  } catch (e) {
+    console.log('❌ [DEBUG] Erro ao listar notificações:', e);
   }
 }

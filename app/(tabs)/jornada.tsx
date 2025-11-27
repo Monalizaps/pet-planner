@@ -41,7 +41,8 @@ export default function Jornada() {
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [selectedDate, setSelectedDate] = useState('');
+  const today = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(today);
   const [markedDates, setMarkedDates] = useState<any>({});
   
   // Modals
@@ -69,6 +70,11 @@ export default function Jornada() {
   const [quickTaskTimeDate, setQuickTaskTimeDate] = useState(new Date());
   const [feedingStartTimeDate, setFeedingStartTimeDate] = useState(new Date());
   const [medicationStartTimeDate, setMedicationStartTimeDate] = useState(new Date());
+
+  // Seleção múltipla e agrupamento
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedTasks, setSelectedTasks] = useState<string[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -98,6 +104,110 @@ export default function Jornada() {
   const getTasksForDate = (dateStr: string) => {
     return tasks.filter(
       (task) => task.dateTime.toISOString().split('T')[0] === dateStr
+    );
+  };
+
+  // Agrupar tarefas por groupId OU por título similar
+  const groupTasks = (tasksToGroup: Task[]) => {
+    const grouped: { [key: string]: Task[] } = {};
+    const ungrouped: Task[] = [];
+
+    // Primeiro, agrupar por groupId explícito
+    const withGroupId = tasksToGroup.filter(t => t.groupId);
+    const withoutGroupId = tasksToGroup.filter(t => !t.groupId);
+
+    withGroupId.forEach(task => {
+      if (!grouped[task.groupId!]) {
+        grouped[task.groupId!] = [];
+      }
+      grouped[task.groupId!].push(task);
+    });
+
+    // Depois, tentar agrupar tarefas sem groupId por título base
+    withoutGroupId.forEach(task => {
+      // Extrair título base (remover horários/números entre parênteses)
+      const baseTitle = task.title.replace(/\s*\(\d+\)\s*/, '').trim();
+      
+      // Procurar tarefas similares no mesmo dia
+      const taskDate = task.dateTime.toISOString().split('T')[0];
+      const similarTasks = withoutGroupId.filter(t => {
+        const tDate = t.dateTime.toISOString().split('T')[0];
+        const tBaseTitle = t.title.replace(/\s*\(\d+\)\s*/, '').trim();
+        return tDate === taskDate && tBaseTitle === baseTitle;
+      });
+
+      // Se encontrou 2+ tarefas similares, criar um grupo automático
+      if (similarTasks.length >= 2) {
+        const autoGroupId = `auto_${baseTitle}_${taskDate}`;
+        if (!grouped[autoGroupId]) {
+          grouped[autoGroupId] = [];
+        }
+        if (!grouped[autoGroupId].includes(task)) {
+          grouped[autoGroupId].push(task);
+        }
+      } else {
+        // Tarefa única, não agrupar
+        if (!ungrouped.includes(task)) {
+          ungrouped.push(task);
+        }
+      }
+    });
+
+    return { grouped, ungrouped };
+  };
+
+  // Toggle grupo expandido/colapsado
+  const toggleGroup = (groupId: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
+    }
+    setExpandedGroups(newExpanded);
+  };
+
+  // Toggle seleção de tarefa individual
+  const toggleTaskSelection = (taskId: string) => {
+    if (selectedTasks.includes(taskId)) {
+      setSelectedTasks(selectedTasks.filter(id => id !== taskId));
+    } else {
+      setSelectedTasks([...selectedTasks, taskId]);
+    }
+  };
+
+  // Selecionar todas as tarefas de um grupo
+  const selectGroup = (groupTasks: Task[]) => {
+    const groupTaskIds = groupTasks.map(t => t.id);
+    const allSelected = groupTaskIds.every(id => selectedTasks.includes(id));
+    
+    if (allSelected) {
+      setSelectedTasks(selectedTasks.filter(id => !groupTaskIds.includes(id)));
+    } else {
+      setSelectedTasks([...new Set([...selectedTasks, ...groupTaskIds])]);
+    }
+  };
+
+  // Excluir tarefas selecionadas
+  const deleteSelectedTasks = async () => {
+    Alert.alert(
+      'Excluir Tarefas',
+      `Tem certeza que deseja excluir ${selectedTasks.length} tarefa(s)?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            for (const taskId of selectedTasks) {
+              await deleteTask(taskId);
+            }
+            setSelectedTasks([]);
+            setSelectionMode(false);
+            loadData();
+          },
+        },
+      ]
     );
   };
 
@@ -162,60 +272,89 @@ export default function Jornada() {
   };
 
   const createQuickTask = async () => {
-    if (!selectedPet || !quickTaskTitle.trim()) {
-      Alert.alert('Erro', 'Selecione um pet e defina um título para a tarefa');
-      return;
-    }
-
-    const pet = pets.find(p => p.id === selectedPet);
-    if (!pet) return;
-
-    const [hour, minute] = quickTaskTime.split(':').map(Number);
-    const taskDate = new Date(selectedDate);
-    taskDate.setHours(hour, minute, 0, 0);
-
-    const taskIcons: { [key: string]: string } = {
-      medication: '💊',
-      feeding: '🍽️',
-      consultation: '🏥',
-      grooming: '✂️',
-      exercise: '🏃',
-      other: '📝',
-    };
-
-    const task: Task = {
-      id: Date.now().toString() + Math.random(),
-      petId: selectedPet,
-      title: `${taskIcons[quickTaskType]} ${quickTaskTitle} - ${pet.name}`,
-      description: quickTaskDescription.trim() || undefined,
-      dateTime: taskDate,
-      completed: false,
-      taskType: quickTaskType,
-    };
-
-    await saveTask(task);
-    
-    // Tentar agendar notificação (não funciona no Expo Go)
     try {
-      await scheduleTaskNotification(task.id, task.title, task.dateTime);
+      if (!selectedPet || !quickTaskTitle.trim()) {
+        Alert.alert('Erro', 'Selecione um pet e defina um título para a tarefa');
+        return;
+      }
+
+      const pet = pets.find(p => p.id === selectedPet);
+      if (!pet) {
+        Alert.alert('Erro', 'Pet não encontrado');
+        return;
+      }
+
+      const [hour, minute] = quickTaskTime.split(':').map(Number);
+      // Criar data corretamente para evitar problemas de timezone
+      const [year, month, day] = selectedDate.split('-').map(Number);
+      const taskDate = new Date(year, month - 1, day, hour, minute, 0, 0);
+
+      console.log('📝 Criando tarefa rápida:', {
+        pet: pet.name,
+        title: quickTaskTitle,
+        dateTime: taskDate.toISOString(),
+        selectedDate,
+        localDateTime: taskDate.toLocaleString('pt-BR'),
+      });
+
+      const taskIcons: { [key: string]: string } = {
+        medication: '💊',
+        feeding: '🍽️',
+        consultation: '🏥',
+        grooming: '✂️',
+        exercise: '🏃',
+        other: '📝',
+      };
+
+      const task: Task = {
+        id: Date.now().toString() + Math.random(),
+        petId: selectedPet,
+        title: `${taskIcons[quickTaskType]} ${quickTaskTitle} - ${pet.name}`,
+        description: quickTaskDescription.trim() || undefined,
+        dateTime: taskDate,
+        completed: false,
+        taskType: quickTaskType,
+      };
+
+      // Agendar notificação primeiro
+      try {
+        const notificationId = await scheduleTaskNotification(task.id, task.title, task.dateTime);
+        if (notificationId) {
+          task.notificationId = notificationId;
+          console.log('✅ Notificação agendada:', notificationId);
+        } else {
+          console.log('⚠️ Notificação não foi agendada (pode estar no passado ou Expo Go)');
+        }
+      } catch (error) {
+        console.log('⚠️ Erro ao agendar notificação:', error);
+        // Continuar mesmo se notificação falhar
+      }
+
+      console.log('💾 Salvando tarefa:', JSON.stringify(task, null, 2));
+      await saveTask(task);
+      console.log('✅ Tarefa salva com sucesso, ID:', task.id);
+
+      // Recarregar dados imediatamente
+      console.log('🔄 Recarregando lista de tarefas...');
+      await loadData();
+      console.log('✅ Lista recarregada');
+
+      // Resetar formulário
+      setShowQuickTaskModal(false);
+      setQuickTaskType('other');
+      setQuickTaskTitle('');
+      setQuickTaskTime('09:00');
+      setQuickTaskDescription('');
+      setSelectedPet('');
+
+      Alert.alert(
+        '✅ Tarefa criada!', 
+        `${task.title} foi agendada com sucesso para ${taskDate.toLocaleDateString('pt-BR')} às ${quickTaskTime}.`
+      );
     } catch (error) {
-      console.log('Notificações não suportadas no Expo Go');
+      console.error('❌ Erro ao criar tarefa:', error);
+      Alert.alert('Erro', 'Falha ao criar tarefa: ' + error);
     }
-
-    // Resetar formulário
-    setShowQuickTaskModal(false);
-    setQuickTaskType('other');
-    setQuickTaskTitle('');
-    setQuickTaskTime('09:00');
-    setQuickTaskDescription('');
-    setSelectedPet('');
-
-    Alert.alert(
-      '✅ Tarefa criada!', 
-      `${task.title} foi agendada com sucesso.\n\n⚠️ Notificações push não funcionam no Expo Go. Para receber notificações reais, é necessário gerar um build nativo do app.`,
-      [{ text: 'Entendi' }]
-    );
-    loadData();
   };
 
   const getPetIcon = (type: string) => {
@@ -247,58 +386,93 @@ export default function Jornada() {
   };
 
   const createFeedingTasks = async () => {
-    if (!selectedPet || !feedingType.trim()) {
-      Alert.alert('Erro', 'Preencha todos os campos');
-      return;
+    try {
+      if (!selectedPet || !feedingType.trim()) {
+        Alert.alert('Erro', 'Preencha todos os campos');
+        return;
+      }
+
+      const interval = parseInt(feedingInterval);
+      if (interval < 1 || interval > 24) {
+        Alert.alert('Erro', 'Intervalo deve ser entre 1 e 24 horas');
+        return;
+      }
+
+      const pet = pets.find(p => p.id === selectedPet);
+      if (!pet) {
+        Alert.alert('Erro', 'Pet não encontrado');
+        return;
+      }
+
+      console.log('🍽️ Criando tarefas de alimentação para', pet.name);
+
+      // Parsear hora inicial
+      const [startHour, startMinute] = feedingStartTime.split(':').map(Number);
+
+      const tasksPerDay = Math.floor(24 / interval);
+      const newTasks: Task[] = [];
+
+      // Criar ID de grupo único para todas as tarefas
+      const groupId = `feeding_${Date.now()}`;
+      const groupName = `🍽️ ${feedingType} - ${pet.name}`;
+
+      // Criar tarefas para hoje
+      const today = new Date();
+      
+      for (let i = 0; i < tasksPerDay; i++) {
+        const taskTime = new Date(today);
+        const totalHours = startHour + (i * interval);
+        
+        // Se passou de 24h, vai para o próximo dia
+        const days = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        
+        taskTime.setDate(today.getDate() + days);
+        taskTime.setHours(hours, startMinute, 0, 0);
+
+        const task: Task = {
+          id: Date.now().toString() + Math.random(),
+          petId: selectedPet,
+          title: `🍽️ ${feedingType} - ${pet.name}`,
+          dateTime: taskTime,
+          completed: false,
+          groupId,
+          groupName,
+        };
+
+        // Agendar notificação e salvar ID
+        try {
+          const notificationId = await scheduleTaskNotification(task.id, task.title, task.dateTime, 'daily');
+          if (notificationId) {
+            task.notificationId = notificationId;
+          }
+        } catch (error) {
+          console.log('⚠️ Erro ao agendar alimentação:', error);
+        }
+
+        await saveTask(task);
+        newTasks.push(task);
+      }
+
+      console.log(`✅ ${newTasks.length} tarefas de alimentação criadas`);
+
+      // Recarregar dados imediatamente
+      await loadData();
+
+      setShowFeedingModal(false);
+      setFeedingInterval('8');
+      setFeedingType('');
+      setFeedingStartTime('08:00');
+      setSelectedPet('');
+      
+      Alert.alert(
+        '✅ Sucesso!',
+        `${tasksPerDay} horários de alimentação criados para ${pet.name}`
+      );
+    } catch (error) {
+      console.error('❌ Erro ao criar alimentação:', error);
+      Alert.alert('Erro', 'Falha ao criar alimentação: ' + error);
     }
-
-    const interval = parseInt(feedingInterval);
-    if (interval < 1 || interval > 24) {
-      Alert.alert('Erro', 'Intervalo deve ser entre 1 e 24 horas');
-      return;
-    }
-
-    const pet = pets.find(p => p.id === selectedPet);
-    if (!pet) return;
-
-    // Parsear hora inicial
-    const [startHour, startMinute] = feedingStartTime.split(':').map(Number);
-
-    const tasksPerDay = Math.floor(24 / interval);
-    const newTasks: Task[] = [];
-
-    // Criar tarefas para hoje
-    const today = new Date();
-    today.setHours(startHour, startMinute, 0, 0);
-
-    for (let i = 0; i < tasksPerDay; i++) {
-      const taskTime = new Date(today);
-      taskTime.setHours(startHour + (i * interval), startMinute);
-
-      const task: Task = {
-        id: Date.now().toString() + Math.random(),
-        petId: selectedPet,
-        title: `🍽️ ${feedingType} - ${pet.name}`,
-        dateTime: taskTime,
-        completed: false,
-      };
-
-      await saveTask(task);
-      await scheduleTaskNotification(task.id, task.title, task.dateTime, 'daily');
-      newTasks.push(task);
-    }
-
-    setShowFeedingModal(false);
-    setFeedingInterval('8');
-    setFeedingType('');
-    setFeedingStartTime('08:00');
-    setSelectedPet('');
-    
-    Alert.alert(
-      '✅ Sucesso!',
-      `${tasksPerDay} horários de alimentação criados para ${pet.name}\n\n⚠️ Notificações push não funcionam no Expo Go. Verifique o calendário para acompanhar as tarefas.`,
-      [{ text: 'Entendi', onPress: () => loadData() }]
-    );
   };
 
   const createMedicationTasks = async () => {
@@ -330,12 +504,23 @@ export default function Jornada() {
     const totalTasks = tasksPerDay * days;
     const newTasks: Task[] = [];
 
+    // Criar ID de grupo único para todas as tarefas
+    const groupId = `medication_${Date.now()}`;
+    const groupName = `💊 ${medicationName} (${medicationDosage}) - ${pet.name}`;
+
     // Criar tarefas para os próximos X dias
+    const now = new Date();
     for (let day = 0; day < days; day++) {
       for (let i = 0; i < tasksPerDay; i++) {
-        const taskTime = new Date();
-        taskTime.setDate(taskTime.getDate() + day);
-        taskTime.setHours(startHour + (i * interval), startMinute, 0, 0);
+        const taskTime = new Date(now);
+        const totalHours = startHour + (i * interval);
+        
+        // Calcular dias e horas corretamente
+        const additionalDays = Math.floor(totalHours / 24);
+        const hours = totalHours % 24;
+        
+        taskTime.setDate(now.getDate() + day + additionalDays);
+        taskTime.setHours(hours, startMinute, 0, 0);
 
         const task: Task = {
           id: Date.now().toString() + Math.random(),
@@ -343,13 +528,27 @@ export default function Jornada() {
           title: `💊 ${medicationName} (${medicationDosage}) - ${pet.name}`,
           dateTime: taskTime,
           completed: false,
+          groupId,
+          groupName,
         };
 
+        // Agendar notificação e salvar ID
+        try {
+          const notificationId = await scheduleTaskNotification(task.id, task.title, task.dateTime);
+          if (notificationId) {
+            task.notificationId = notificationId;
+          }
+        } catch (error) {
+          console.log('Erro ao agendar medicação:', error);
+        }
+
         await saveTask(task);
-        await scheduleTaskNotification(task.id, task.title, task.dateTime);
         newTasks.push(task);
       }
     }
+
+    // Recarregar dados imediatamente
+    await loadData();
 
     setShowMedicationModal(false);
     setMedicationInterval('8');
@@ -361,8 +560,7 @@ export default function Jornada() {
     
     Alert.alert(
       '✅ Sucesso!',
-      `${totalTasks} doses de ${medicationName} agendadas para ${pet.name}\n\nTratamento: ${days} dias (${tasksPerDay} doses/dia)\n\n⚠️ Notificações push não funcionam no Expo Go. As medicações aparecerão no calendário.`,
-      [{ text: 'Entendi', onPress: () => loadData() }]
+      `${totalTasks} doses de ${medicationName} agendadas para ${pet.name}\n\nTratamento: ${days} dias (${tasksPerDay} doses/dia)`
     );
   };
 
@@ -483,58 +681,222 @@ export default function Jornada() {
         {/* Tarefas do dia selecionado */}
         {selectedDate && (
           <View style={styles.tasksSection}>
-            <Text style={styles.sectionTitle}>
-              Tarefas para {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-              })}
-            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={styles.sectionTitle}>
+                Tarefas para {new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                })}
+              </Text>
+              {getTasksForDate(selectedDate).length > 0 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectionMode(!selectionMode);
+                    if (selectionMode) setSelectedTasks([]);
+                  }}
+                  style={{ padding: 8 }}
+                >
+                  <Ionicons 
+                    name={selectionMode ? "close" : "checkbox-outline"} 
+                    size={24} 
+                    color={selectionMode ? "#FF6B9D" : "#6B7FFF"} 
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {selectionMode && selectedTasks.length > 0 && (
+              <TouchableOpacity
+                onPress={deleteSelectedTasks}
+                style={{
+                  backgroundColor: '#FF6B9D',
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 12,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                }}
+              >
+                <Ionicons name="trash" size={20} color="#fff" />
+                <Text style={{ color: '#fff', fontFamily: 'Quicksand_600SemiBold', fontSize: 16 }}>
+                  Excluir {selectedTasks.length} tarefa(s)
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {getTasksForDate(selectedDate).length === 0 ? (
               <View style={styles.emptyCard}>
                 <Text style={styles.emptyText}>✨ Nenhuma tarefa para este dia</Text>
               </View>
-            ) : (
-              getTasksForDate(selectedDate).map((task) => {
-                const pet = pets.find((p) => p.id === task.petId);
-                return (
-                  <View key={task.id} style={styles.taskCard}>
-                    <View style={styles.taskLeft}>
-                      <TouchableOpacity
-                        style={[
-                          styles.taskCheckbox,
-                          task.completed && styles.taskCheckboxCompleted
-                        ]}
-                        onPress={() => toggleTaskComplete(task)}
-                      >
-                        {task.completed && (
-                          <Ionicons name="checkmark" size={16} color="#fff" />
+            ) : (() => {
+              const { grouped, ungrouped } = groupTasks(getTasksForDate(selectedDate));
+              
+              return (
+                <>
+                  {/* Renderizar grupos */}
+                  {Object.entries(grouped).map(([groupId, groupTasks]) => {
+                    const isExpanded = expandedGroups.has(groupId);
+                    const firstTask = groupTasks[0];
+                    const allSelected = groupTasks.every(t => selectedTasks.includes(t.id));
+                    const someSelected = groupTasks.some(t => selectedTasks.includes(t.id));
+                    
+                    return (
+                      <View key={groupId} style={styles.groupCard}>
+                        <TouchableOpacity
+                          style={styles.groupHeader}
+                          onPress={() => toggleGroup(groupId)}
+                          onLongPress={() => {
+                            setSelectionMode(true);
+                            selectGroup(groupTasks);
+                          }}
+                        >
+                          {selectionMode && (
+                            <TouchableOpacity
+                              style={[
+                                styles.taskCheckbox,
+                                (allSelected || someSelected) && styles.taskCheckboxCompleted,
+                                someSelected && !allSelected && { opacity: 0.5 }
+                              ]}
+                              onPress={() => selectGroup(groupTasks)}
+                            >
+                              {(allSelected || someSelected) && (
+                                <Ionicons name="checkmark" size={16} color="#fff" />
+                              )}
+                            </TouchableOpacity>
+                          )}
+                          <View style={{ flex: 1 }}>
+                            <Text style={styles.groupTitle}>{firstTask.groupName || firstTask.title}</Text>
+                            <Text style={styles.groupSubtitle}>
+                              {groupTasks.length} horário(s) • {groupTasks.filter(t => t.completed).length} concluído(s)
+                            </Text>
+                          </View>
+                          <Ionicons 
+                            name={isExpanded ? "chevron-up" : "chevron-down"} 
+                            size={24} 
+                            color="#6B7FFF" 
+                          />
+                        </TouchableOpacity>
+                        
+                        {isExpanded && (
+                          <View style={styles.groupContent}>
+                            {groupTasks
+                              .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
+                              .map((task) => {
+                                const pet = pets.find((p) => p.id === task.petId);
+                                const isSelected = selectedTasks.includes(task.id);
+                                
+                                return (
+                                  <View key={task.id} style={[styles.groupTaskCard, isSelected && { backgroundColor: '#E8F0FF' }]}>
+                                    {selectionMode && (
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.taskCheckbox,
+                                          isSelected && styles.taskCheckboxCompleted
+                                        ]}
+                                        onPress={() => toggleTaskSelection(task.id)}
+                                      >
+                                        {isSelected && (
+                                          <Ionicons name="checkmark" size={16} color="#fff" />
+                                        )}
+                                      </TouchableOpacity>
+                                    )}
+                                    {!selectionMode && (
+                                      <TouchableOpacity
+                                        style={[
+                                          styles.taskCheckbox,
+                                          task.completed && styles.taskCheckboxCompleted
+                                        ]}
+                                        onPress={() => toggleTaskComplete(task)}
+                                      >
+                                        {task.completed && (
+                                          <Ionicons name="checkmark" size={16} color="#fff" />
+                                        )}
+                                      </TouchableOpacity>
+                                    )}
+                                    <Text style={[
+                                      styles.groupTaskTime,
+                                      task.completed && styles.taskTitleCompleted
+                                    ]}>
+                                      {task.dateTime.toLocaleTimeString('pt-BR', {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </Text>
+                                  </View>
+                                );
+                              })}
+                          </View>
                         )}
-                      </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={{ flex: 1 }}
-                        onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
-                      >
-                        <Text style={[
-                          styles.taskTitle,
-                          task.completed && styles.taskTitleCompleted
-                        ]}>
-                          {task.title}
+                      </View>
+                    );
+                  })}
+                  
+                  {/* Renderizar tarefas individuais (sem grupo) */}
+                  {ungrouped.map((task) => {
+                    const pet = pets.find((p) => p.id === task.petId);
+                    const isSelected = selectedTasks.includes(task.id);
+                    
+                    return (
+                      <View key={task.id} style={[styles.taskCard, isSelected && { backgroundColor: '#E8F0FF' }]}>
+                        <View style={styles.taskLeft}>
+                          {selectionMode ? (
+                            <TouchableOpacity
+                              style={[
+                                styles.taskCheckbox,
+                                isSelected && styles.taskCheckboxCompleted
+                              ]}
+                              onPress={() => toggleTaskSelection(task.id)}
+                            >
+                              {isSelected && (
+                                <Ionicons name="checkmark" size={16} color="#fff" />
+                              )}
+                            </TouchableOpacity>
+                          ) : (
+                            <TouchableOpacity
+                              style={[
+                                styles.taskCheckbox,
+                                task.completed && styles.taskCheckboxCompleted
+                              ]}
+                              onPress={() => toggleTaskComplete(task)}
+                            >
+                              {task.completed && (
+                                <Ionicons name="checkmark" size={16} color="#fff" />
+                              )}
+                            </TouchableOpacity>
+                          )}
+                          <TouchableOpacity 
+                            style={{ flex: 1 }}
+                            onPress={() => !selectionMode && router.push(`/edit-task?taskId=${task.id}`)}
+                            onLongPress={() => {
+                              setSelectionMode(true);
+                              toggleTaskSelection(task.id);
+                            }}
+                          >
+                            <Text style={[
+                              styles.taskTitle,
+                              task.completed && styles.taskTitleCompleted
+                            ]}>
+                              {task.title}
+                            </Text>
+                            <Text style={styles.taskPet}>
+                              {pet ? getPetIcon(pet.type) : '🐾'} {pet?.name || 'Pet'}
+                            </Text>
+                          </TouchableOpacity>
+                        </View>
+                        <Text style={styles.taskTime}>
+                          {task.dateTime.toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </Text>
-                        <Text style={styles.taskPet}>
-                          {pet ? getPetIcon(pet.type) : '🐾'} {pet?.name || 'Pet'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <Text style={styles.taskTime}>
-                      {task.dateTime.toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </Text>
-                  </View>
-                );
-              })
-            )}
+                      </View>
+                    );
+                  })}
+                </>
+              );
+            })()}
           </View>
         )}
 
@@ -545,72 +907,158 @@ export default function Jornada() {
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>📝 Nenhuma tarefa agendada</Text>
             </View>
-          ) : (
-            tasks
+          ) : (() => {
+            const allPendingTasks = tasks
               .filter(t => new Date(t.dateTime) >= new Date())
-              .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
-              .map((task) => {
-                const pet = pets.find((p) => p.id === task.petId);
-                const date = new Date(task.dateTime);
-                const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-                
-                return (
-                  <View key={task.id} style={styles.taskCard}>
-                    <View style={styles.taskLeft}>
+              .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime());
+            
+            const { grouped, ungrouped } = groupTasks(allPendingTasks);
+            
+            return (
+              <>
+                {/* Renderizar grupos */}
+                {Object.entries(grouped).map(([groupId, groupTasks]) => {
+                  const isExpanded = expandedGroups.has(groupId);
+                  const firstTask = groupTasks[0];
+                  const firstDate = new Date(firstTask.dateTime);
+                  const isToday = firstDate.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                  
+                  return (
+                    <View key={groupId} style={styles.groupCard}>
                       <TouchableOpacity
-                        style={[
-                          styles.taskCheckbox,
-                          task.completed && styles.taskCheckboxCompleted
-                        ]}
-                        onPress={() => toggleTaskComplete(task)}
+                        style={styles.groupHeader}
+                        onPress={() => toggleGroup(groupId)}
                       >
-                        {task.completed && (
-                          <Ionicons name="checkmark" size={16} color="#fff" />
-                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.groupTitle}>{firstTask.groupName || firstTask.title}</Text>
+                          <Text style={styles.groupSubtitle}>
+                            {groupTasks.length} horário(s) • {groupTasks.filter(t => t.completed).length} concluído(s)
+                          </Text>
+                        </View>
+                        <View style={{ alignItems: 'flex-end', marginRight: 8 }}>
+                          <Text style={[styles.taskDate, isToday && { color: '#FF6B9D' }]}>
+                            {isToday ? 'Hoje' : firstDate.toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: 'short',
+                            })}
+                          </Text>
+                        </View>
+                        <Ionicons 
+                          name={isExpanded ? "chevron-up" : "chevron-down"} 
+                          size={24} 
+                          color="#6B7FFF" 
+                        />
                       </TouchableOpacity>
-                      <TouchableOpacity 
-                        style={{ flex: 1 }}
-                        onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
-                      >
-                        <Text style={[
-                          styles.taskTitle,
-                          task.completed && styles.taskTitleCompleted
-                        ]}>
-                          {task.title}
-                        </Text>
-                        <Text style={styles.taskPet}>
-                          {pet ? getPetIcon(pet.type) : '🐾'} {pet?.name || 'Pet'}
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    <View style={styles.taskRight}>
-                      <View>
-                        <Text style={[styles.taskDate, isToday && { color: '#FF6B9D' }]}>
-                          {isToday ? 'Hoje' : date.toLocaleDateString('pt-BR', {
-                            day: '2-digit',
-                            month: 'short',
+                      
+                      {isExpanded && (
+                        <View style={styles.groupContent}>
+                          {groupTasks.map((task) => {
+                            const pet = pets.find((p) => p.id === task.petId);
+                            const date = new Date(task.dateTime);
+                            
+                            return (
+                              <View key={task.id} style={styles.groupTaskCard}>
+                                <TouchableOpacity
+                                  style={[
+                                    styles.taskCheckbox,
+                                    task.completed && styles.taskCheckboxCompleted
+                                  ]}
+                                  onPress={() => toggleTaskComplete(task)}
+                                >
+                                  {task.completed && (
+                                    <Ionicons name="checkmark" size={16} color="#fff" />
+                                  )}
+                                </TouchableOpacity>
+                                <Text style={[
+                                  styles.groupTaskTime,
+                                  task.completed && styles.taskTitleCompleted
+                                ]}>
+                                  {date.toLocaleTimeString('pt-BR', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </Text>
+                                {task.completed && (
+                                  <TouchableOpacity
+                                    onPress={() => handleDeleteTask(task.id, task.title)}
+                                  >
+                                    <Ionicons name="trash-outline" size={18} color="#FF6B9D" />
+                                  </TouchableOpacity>
+                                )}
+                              </View>
+                            );
                           })}
-                        </Text>
-                        <Text style={styles.taskTime}>
-                          {date.toLocaleTimeString('pt-BR', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </Text>
-                      </View>
-                      {task.completed && (
-                        <TouchableOpacity
-                          style={styles.deleteButton}
-                          onPress={() => handleDeleteTask(task.id, task.title)}
-                        >
-                          <Ionicons name="trash-outline" size={20} color="#FF6B9D" />
-                        </TouchableOpacity>
+                        </View>
                       )}
                     </View>
-                  </View>
-                );
-              })
-          )}
+                  );
+                })}
+                
+                {/* Renderizar tarefas individuais */}
+                {ungrouped.map((task) => {
+                  const pet = pets.find((p) => p.id === task.petId);
+                  const date = new Date(task.dateTime);
+                  const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                  
+                  return (
+                    <View key={task.id} style={styles.taskCard}>
+                      <View style={styles.taskLeft}>
+                        <TouchableOpacity
+                          style={[
+                            styles.taskCheckbox,
+                            task.completed && styles.taskCheckboxCompleted
+                          ]}
+                          onPress={() => toggleTaskComplete(task)}
+                        >
+                          {task.completed && (
+                            <Ionicons name="checkmark" size={16} color="#fff" />
+                          )}
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                          style={{ flex: 1 }}
+                          onPress={() => router.push(`/edit-task?taskId=${task.id}`)}
+                        >
+                          <Text style={[
+                            styles.taskTitle,
+                            task.completed && styles.taskTitleCompleted
+                          ]}>
+                            {task.title}
+                          </Text>
+                          <Text style={styles.taskPet}>
+                            {pet ? getPetIcon(pet.type) : '🐾'} {pet?.name || 'Pet'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      <View style={styles.taskRight}>
+                        <View>
+                          <Text style={[styles.taskDate, isToday && { color: '#FF6B9D' }]}>
+                            {isToday ? 'Hoje' : date.toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: 'short',
+                            })}
+                          </Text>
+                          <Text style={styles.taskTime}>
+                            {date.toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </Text>
+                        </View>
+                        {task.completed && (
+                          <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={() => handleDeleteTask(task.id, task.title)}
+                          >
+                            <Ionicons name="trash-outline" size={20} color="#FF6B9D" />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </View>
+                  );
+                })}
+              </>
+            );
+          })()}
         </View>
       </ScrollView>
 
@@ -1399,5 +1847,56 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_400Regular',
     color: '#F57C00',
     lineHeight: 18,
+  },
+  // Estilos para agrupamento de tarefas
+  groupCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+    backgroundColor: '#F5F7FF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E8ECFF',
+  },
+  groupTitle: {
+    fontSize: 16,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#2D3436',
+  },
+  groupSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#6B7FFF',
+    marginTop: 2,
+  },
+  groupContent: {
+    padding: 12,
+    backgroundColor: '#fff',
+  },
+  groupTaskCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#FAFBFF',
+    marginBottom: 8,
+  },
+  groupTaskTime: {
+    fontSize: 15,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#2D3436',
+    flex: 1,
   },
 });

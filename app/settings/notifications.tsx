@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { testNotification, checkExactAlarmPermission } from '../utils/notifications';
+import { testNotification, checkExactAlarmPermission, debugScheduledNotifications } from '../utils/notifications';
 
 export default function NotificationsSettings() {
   const router = useRouter();
@@ -124,6 +124,31 @@ export default function NotificationsSettings() {
           <Ionicons name="chevron-forward" size={20} color="#6C63FF" />
         </TouchableOpacity>
 
+        {/* Test Notification Button */}
+        <TouchableOpacity 
+          style={styles.testButton}
+          onPress={async () => {
+            await testNotification();
+            if (Platform.OS === 'android' && Platform.Version >= 31) {
+              await checkExactAlarmPermission();
+            }
+          }}
+        >
+          <Ionicons name="flask-outline" size={22} color="#fff" />
+          <Text style={styles.testButtonText}>Testar Notificação</Text>
+        </TouchableOpacity>
+
+        {/* Botão debug da fila */}
+        <TouchableOpacity 
+          style={[styles.testButton, { backgroundColor: '#444', marginTop: 12 }]}
+          onPress={async () => {
+            await debugScheduledNotifications();
+          }}
+        >
+          <Ionicons name="list-outline" size={22} color="#fff" />
+          <Text style={styles.testButtonText}>Ver Fila</Text>
+        </TouchableOpacity>
+
         {/* Reminder Types */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Tipos de Lembrete</Text>
@@ -196,20 +221,6 @@ export default function NotificationsSettings() {
             Configure os lembretes de acordo com suas preferências.
           </Text>
         </View>
-
-        {/* Test Notification Button */}
-        <TouchableOpacity 
-          style={styles.testButton}
-          onPress={async () => {
-            await testNotification();
-            if (Platform.OS === 'android' && Platform.Version >= 31) {
-              await checkExactAlarmPermission();
-            }
-          }}
-        >
-          <Ionicons name="flask-outline" size={22} color="#fff" />
-          <Text style={styles.testButtonText}>Testar Notificação</Text>
-        </TouchableOpacity>
       </ScrollView>
     </View>
   );

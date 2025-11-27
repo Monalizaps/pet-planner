@@ -24,6 +24,7 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [moodData, setMoodData] = useState<{ [petId: string]: MoodEntry[] }>({});
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     loadData();
@@ -66,6 +67,58 @@ export default function Home() {
       .filter((task) => task.dateTime > today && !task.completed)
       .sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime())
       .slice(0, 5);
+  };
+
+  // Agrupar tarefas por groupId OU por título similar
+  const groupTasks = (tasksToGroup: Task[]) => {
+    const grouped: { [key: string]: Task[] } = {};
+    const ungrouped: Task[] = [];
+
+    const withGroupId = tasksToGroup.filter(t => t.groupId);
+    const withoutGroupId = tasksToGroup.filter(t => !t.groupId);
+
+    withGroupId.forEach(task => {
+      if (!grouped[task.groupId!]) {
+        grouped[task.groupId!] = [];
+      }
+      grouped[task.groupId!].push(task);
+    });
+
+    withoutGroupId.forEach(task => {
+      const baseTitle = task.title.replace(/\s*\(\d+\)\s*/, '').trim();
+      const taskDate = task.dateTime.toISOString().split('T')[0];
+      const similarTasks = withoutGroupId.filter(t => {
+        const tDate = t.dateTime.toISOString().split('T')[0];
+        const tBaseTitle = t.title.replace(/\s*\(\d+\)\s*/, '').trim();
+        return tDate === taskDate && tBaseTitle === baseTitle;
+      });
+
+      if (similarTasks.length >= 2) {
+        const autoGroupId = `auto_${baseTitle}_${taskDate}`;
+        if (!grouped[autoGroupId]) {
+          grouped[autoGroupId] = [];
+        }
+        if (!grouped[autoGroupId].includes(task)) {
+          grouped[autoGroupId].push(task);
+        }
+      } else {
+        if (!ungrouped.includes(task)) {
+          ungrouped.push(task);
+        }
+      }
+    });
+
+    return { grouped, ungrouped };
+  };
+
+  const toggleGroup = (groupId: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
+    }
+    setExpandedGroups(newExpanded);
   };
 
   const getMoodSummary = (petId: string) => {
@@ -368,43 +421,108 @@ export default function Home() {
               <TaskIcon size={32} color="#4CAF50" />
               <Text style={styles.emptyTaskText}>Nenhuma tarefa pendente</Text>
             </View>
-          ) : (
-            getUpcomingTasks().map(task => {
-              const pet = pets.find(p => p.id === task.petId);
-              const date = new Date(task.dateTime);
-              const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
-              
-              return (
-                <TouchableOpacity
-                  key={task.id}
-                  style={styles.taskCard}
-                  onPress={() => router.push('/jornada')}
-                >
-                  <View style={styles.taskLeft}>
-                    <View style={[
-                      styles.taskDot,
-                      isToday && styles.taskDotToday
-                    ]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.taskTitle}>{task.title}</Text>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                        <PetIcon type={pet?.type || 'other'} size={14} color="#666" />
-                        <Text style={styles.taskPet}>{pet?.name || 'Pet'}</Text>
-                      </View>
+          ) : (() => {
+            const { grouped, ungrouped } = groupTasks(getUpcomingTasks());
+            
+            return (
+              <>
+                {/* Renderizar grupos */}
+                {Object.entries(grouped).map(([groupId, groupTasks]) => {
+                  const isExpanded = expandedGroups.has(groupId);
+                  const firstTask = groupTasks[0];
+                  const pet = pets.find(p => p.id === firstTask.petId);
+                  const date = new Date(firstTask.dateTime);
+                  const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                  
+                  return (
+                    <View key={groupId} style={styles.groupCard}>
+                      <TouchableOpacity
+                        style={styles.groupHeader}
+                        onPress={() => toggleGroup(groupId)}
+                      >
+                        <View style={[
+                          styles.taskDot,
+                          isToday && styles.taskDotToday
+                        ]} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.taskTitle}>{firstTask.groupName || firstTask.title}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                            <PetIcon type={pet?.type || 'other'} size={14} color="#666" />
+                            <Text style={styles.taskPet}>
+                              {pet?.name || 'Pet'} • {groupTasks.length} horário(s)
+                            </Text>
+                          </View>
+                        </View>
+                        <View style={styles.taskRight}>
+                          <Text style={styles.taskDate}>
+                            {isToday ? 'Hoje' : date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                          </Text>
+                        </View>
+                        <Ionicons 
+                          name={isExpanded ? "chevron-up" : "chevron-down"} 
+                          size={20} 
+                          color="#6B7FFF" 
+                          style={{ marginLeft: 8 }}
+                        />
+                      </TouchableOpacity>
+                      
+                      {isExpanded && (
+                        <View style={styles.groupContent}>
+                          {groupTasks.map((task) => {
+                            const taskDate = new Date(task.dateTime);
+                            return (
+                              <View key={task.id} style={styles.groupTaskItem}>
+                                <Text style={styles.groupTaskTime}>
+                                  {taskDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                        </View>
+                      )}
                     </View>
-                  </View>
-                  <View style={styles.taskRight}>
-                    <Text style={styles.taskDate}>
-                      {isToday ? 'Hoje' : date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                    </Text>
-                    <Text style={styles.taskTime}>
-                      {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })
-          )}
+                  );
+                })}
+                
+                {/* Renderizar tarefas individuais */}
+                {ungrouped.map(task => {
+                  const pet = pets.find(p => p.id === task.petId);
+                  const date = new Date(task.dateTime);
+                  const isToday = date.toISOString().split('T')[0] === new Date().toISOString().split('T')[0];
+                  
+                  return (
+                    <TouchableOpacity
+                      key={task.id}
+                      style={styles.taskCard}
+                      onPress={() => router.push('/jornada')}
+                    >
+                      <View style={styles.taskLeft}>
+                        <View style={[
+                          styles.taskDot,
+                          isToday && styles.taskDotToday
+                        ]} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.taskTitle}>{task.title}</Text>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                            <PetIcon type={pet?.type || 'other'} size={14} color="#666" />
+                            <Text style={styles.taskPet}>{pet?.name || 'Pet'}</Text>
+                          </View>
+                        </View>
+                      </View>
+                      <View style={styles.taskRight}>
+                        <Text style={styles.taskDate}>
+                          {isToday ? 'Hoje' : date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                        </Text>
+                        <Text style={styles.taskTime}>
+                          {date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </>
+            );
+          })()}
         </View>
       </ScrollView>
     </View>
@@ -845,5 +963,40 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_400Regular',
     color: '#BBB',
     marginTop: 4,
+  },
+  // Estilos para agrupamento de tarefas
+  groupCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    marginBottom: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  groupHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+    backgroundColor: '#F5F7FF',
+  },
+  groupContent: {
+    padding: 12,
+    backgroundColor: '#fff',
+  },
+  groupTaskItem: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#FAFBFF',
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  groupTaskTime: {
+    fontSize: 14,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#6B7FFF',
   },
 });

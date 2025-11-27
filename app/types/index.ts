@@ -32,6 +32,8 @@ export interface Task {
   completed: boolean;
   notificationId?: string;
   taskType?: 'medication' | 'feeding' | 'consultation' | 'grooming' | 'exercise' | 'other';
+  groupId?: string; // ID para agrupar tarefas criadas juntas
+  groupName?: string; // Nome do grupo (ex: "Medicação Antibiótico")
 }
 
 export type MoodType = 'feliz' | 'calmo' | 'ansioso' | 'triste' | 'irritado' | 'energetico';

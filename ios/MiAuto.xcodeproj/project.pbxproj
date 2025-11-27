@@ -9,27 +9,27 @@
 /* Begin PBXBuildFile section */
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		69781281000D82A5F7FB1CF1 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17E68356FB26BA5D79BE999E /* ExpoModulesProvider.swift */; };
+		83FF4606802414E97408EA62 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = E88286E92135998F0D2AD214 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		C83F7D8E9747CA1BADDD6111 /* libPods-MiAutoLembrete.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E6DDE1E3EB5A188FFEBD0118 /* libPods-MiAutoLembrete.a */; };
-		D780080F1286713023806695 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3F42A4367FCCC5E6F1DC2FC0 /* PrivacyInfo.xcprivacy */; };
+		D708CF4B0200E0D3860DA1F7 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38205C1CCDA5F54F1A0B4E01 /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
+		F9C978B238A3D3C18B0BE9D5 /* libPods-MiAuto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B251FFBD9241EA9EC6C369E0 /* libPods-MiAuto.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		13B07F961A680F5B00A75B9A /* MiAutoLembrete.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MiAutoLembrete.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MiAutoLembrete/Images.xcassets; sourceTree = "<group>"; };
-		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MiAutoLembrete/Info.plist; sourceTree = "<group>"; };
-		17E68356FB26BA5D79BE999E /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MiAutoLembrete/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		3F42A4367FCCC5E6F1DC2FC0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MiAutoLembrete/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		41ECFA8E97521BBAE1A4CD6C /* Pods-MiAutoLembrete.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MiAutoLembrete.debug.xcconfig"; path = "Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete.debug.xcconfig"; sourceTree = "<group>"; };
-		6D0112B55B08E7708559FFEC /* Pods-MiAutoLembrete.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MiAutoLembrete.release.xcconfig"; path = "Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete.release.xcconfig"; sourceTree = "<group>"; };
-		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MiAutoLembrete/SplashScreen.storyboard; sourceTree = "<group>"; };
+		13B07F961A680F5B00A75B9A /* MiAuto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MiAuto.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = MiAuto/Images.xcassets; sourceTree = "<group>"; };
+		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = MiAuto/Info.plist; sourceTree = "<group>"; };
+		38205C1CCDA5F54F1A0B4E01 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-MiAuto/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		529AC2B5D5B73F20F6273565 /* Pods-MiAuto.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MiAuto.release.xcconfig"; path = "Target Support Files/Pods-MiAuto/Pods-MiAuto.release.xcconfig"; sourceTree = "<group>"; };
+		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = MiAuto/SplashScreen.storyboard; sourceTree = "<group>"; };
+		B251FFBD9241EA9EC6C369E0 /* libPods-MiAuto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MiAuto.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		E6DDE1E3EB5A188FFEBD0118 /* libPods-MiAutoLembrete.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MiAutoLembrete.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C18FD91334F0ED35BE134771 /* Pods-MiAuto.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MiAuto.debug.xcconfig"; path = "Target Support Files/Pods-MiAuto/Pods-MiAuto.debug.xcconfig"; sourceTree = "<group>"; };
+		E88286E92135998F0D2AD214 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = MiAuto/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MiAutoLembrete/AppDelegate.swift; sourceTree = "<group>"; };
-		F11748442D0722820044C1D9 /* MiAutoLembrete-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MiAutoLembrete-Bridging-Header.h"; path = "MiAutoLembrete/MiAutoLembrete-Bridging-Header.h"; sourceTree = "<group>"; };
+		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = MiAuto/AppDelegate.swift; sourceTree = "<group>"; };
+		F11748442D0722820044C1D9 /* MiAuto-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "MiAuto-Bridging-Header.h"; path = "MiAuto/MiAuto-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,44 +37,50 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C83F7D8E9747CA1BADDD6111 /* libPods-MiAutoLembrete.a in Frameworks */,
+				F9C978B238A3D3C18B0BE9D5 /* libPods-MiAuto.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		13B07FAE1A68108700A75B9A /* MiAutoLembrete */ = {
+		13B07FAE1A68108700A75B9A /* MiAuto */ = {
 			isa = PBXGroup;
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
-				F11748442D0722820044C1D9 /* MiAutoLembrete-Bridging-Header.h */,
+				F11748442D0722820044C1D9 /* MiAuto-Bridging-Header.h */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				3F42A4367FCCC5E6F1DC2FC0 /* PrivacyInfo.xcprivacy */,
+				E88286E92135998F0D2AD214 /* PrivacyInfo.xcprivacy */,
 			);
-			name = MiAutoLembrete;
+			name = MiAuto;
 			sourceTree = "<group>";
 		};
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				E6DDE1E3EB5A188FFEBD0118 /* libPods-MiAutoLembrete.a */,
+				B251FFBD9241EA9EC6C369E0 /* libPods-MiAuto.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		684308040FB5A12136F79C23 /* Pods */ = {
+		4D8CF2C268EA993E7B051743 /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				41ECFA8E97521BBAE1A4CD6C /* Pods-MiAutoLembrete.debug.xcconfig */,
-				6D0112B55B08E7708559FFEC /* Pods-MiAutoLembrete.release.xcconfig */,
+				6CEBFE7E2277075F0CC5B119 /* MiAuto */,
 			);
-			name = Pods;
-			path = Pods;
+			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		6CEBFE7E2277075F0CC5B119 /* MiAuto */ = {
+			isa = PBXGroup;
+			children = (
+				38205C1CCDA5F54F1A0B4E01 /* ExpoModulesProvider.swift */,
+			);
+			name = MiAuto;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -87,12 +93,12 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
-				13B07FAE1A68108700A75B9A /* MiAutoLembrete */,
+				13B07FAE1A68108700A75B9A /* MiAuto */,
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				684308040FB5A12136F79C23 /* Pods */,
-				D5DF54CE7C3E180B5815EF0E /* ExpoModulesProviders */,
+				B2C4DFFFD454B19B241E3C73 /* Pods */,
+				4D8CF2C268EA993E7B051743 /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -102,17 +108,19 @@
 		83CBBA001A601CBA00E9B192 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13B07F961A680F5B00A75B9A /* MiAutoLembrete.app */,
+				13B07F961A680F5B00A75B9A /* MiAuto.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		B90BB3A260E130FF72E4AFDE /* MiAutoLembrete */ = {
+		B2C4DFFFD454B19B241E3C73 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				17E68356FB26BA5D79BE999E /* ExpoModulesProvider.swift */,
+				C18FD91334F0ED35BE134771 /* Pods-MiAuto.debug.xcconfig */,
+				529AC2B5D5B73F20F6273565 /* Pods-MiAuto.release.xcconfig */,
 			);
-			name = MiAutoLembrete;
+			name = Pods;
+			path = Pods;
 			sourceTree = "<group>";
 		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
@@ -121,40 +129,32 @@
 				BB2F792C24A3F905000567C9 /* Expo.plist */,
 			);
 			name = Supporting;
-			path = MiAutoLembrete/Supporting;
-			sourceTree = "<group>";
-		};
-		D5DF54CE7C3E180B5815EF0E /* ExpoModulesProviders */ = {
-			isa = PBXGroup;
-			children = (
-				B90BB3A260E130FF72E4AFDE /* MiAutoLembrete */,
-			);
-			name = ExpoModulesProviders;
+			path = MiAuto/Supporting;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		13B07F861A680F5B00A75B9A /* MiAutoLembrete */ = {
+		13B07F861A680F5B00A75B9A /* MiAuto */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MiAutoLembrete" */;
+			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MiAuto" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				CE2A92C6DA6C5146CCB5315F /* [Expo] Configure project */,
+				0322C7149684F2D8AA8CCD3E /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				7C19D3108CB4CBAE6A1B22C7 /* [CP] Embed Pods Frameworks */,
+				206D4BBBD188EDBFFEAD59E0 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = MiAutoLembrete;
-			productName = MiAutoLembrete;
-			productReference = 13B07F961A680F5B00A75B9A /* MiAutoLembrete.app */;
+			name = MiAuto;
+			productName = MiAuto;
+			productReference = 13B07F961A680F5B00A75B9A /* MiAuto.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -170,7 +170,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MiAutoLembrete" */;
+			buildConfigurationList = 83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MiAuto" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -183,7 +183,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				13B07F861A680F5B00A75B9A /* MiAutoLembrete */,
+				13B07F861A680F5B00A75B9A /* MiAuto */,
 			);
 		};
 /* End PBXProject section */
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				D780080F1286713023806695 /* PrivacyInfo.xcprivacy in Resources */,
+				83FF4606802414E97408EA62 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +220,30 @@
 			shellPath = /bin/sh;
 			shellScript = "if [[ -f \"$PODS_ROOT/../.xcode.env\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env\"\nfi\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n# The project root by default is one level up from the ios directory\nexport PROJECT_ROOT=\"$PROJECT_DIR\"/..\n\nif [[ \"$CONFIGURATION\" = *Debug* ]]; then\n  export SKIP_BUNDLING=1\nfi\nif [[ -z \"$ENTRY_FILE\" ]]; then\n  # Set the entry JS file using the bundler's entry resolution.\n  export ENTRY_FILE=\"$(\"$NODE_BINARY\" -e \"require('expo/scripts/resolveAppEntry')\" \"$PROJECT_ROOT\" ios absolute | tail -n 1)\"\nfi\n\nif [[ -z \"$CLI_PATH\" ]]; then\n  # Use Expo CLI\n  export CLI_PATH=\"$(\"$NODE_BINARY\" --print \"require.resolve('@expo/cli', { paths: [require.resolve('expo/package.json')] })\")\"\nfi\nif [[ -z \"$BUNDLE_COMMAND\" ]]; then\n  # Default Expo CLI command for bundling\n  export BUNDLE_COMMAND=\"export:embed\"\nfi\n\n# Source .xcode.env.updates if it exists to allow\n# SKIP_BUNDLING to be unset if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.updates\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.updates\"\nfi\n# Source local changes to allow overrides\n# if needed\nif [[ -f \"$PODS_ROOT/../.xcode.env.local\" ]]; then\n  source \"$PODS_ROOT/../.xcode.env.local\"\nfi\n\n`\"$NODE_BINARY\" --print \"require('path').dirname(require.resolve('react-native/package.json')) + '/scripts/react-native-xcode.sh'\"`\n\n";
 		};
+		0322C7149684F2D8AA8CCD3E /* [Expo] Configure project */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/MiAuto/MiAuto.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-MiAuto/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-MiAuto/ExpoModulesProvider.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MiAuto/expo-configure-project.sh\"\n";
+		};
 		08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -235,20 +259,20 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MiAutoLembrete-checkManifestLockResult.txt",
+				"$(DERIVED_FILE_DIR)/Pods-MiAuto-checkManifestLockResult.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		7C19D3108CB4CBAE6A1B22C7 /* [CP] Embed Pods Frameworks */ = {
+		206D4BBBD188EDBFFEAD59E0 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete-frameworks.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-MiAuto/Pods-MiAuto-frameworks.sh",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/React-Core-prebuilt/React.framework/React",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/ReactNativeDependencies/ReactNativeDependencies.framework/ReactNativeDependencies",
 				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
@@ -261,7 +285,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete-frameworks.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MiAuto/Pods-MiAuto-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
@@ -270,7 +294,7 @@
 			files = (
 			);
 			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete-resources.sh",
+				"${PODS_ROOT}/Target Support Files/Pods-MiAuto/Pods-MiAuto-resources.sh",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXApplication/ExpoApplication_privacy.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/EXConstants.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/EXConstants/ExpoConstants_privacy.bundle",
@@ -297,32 +321,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MiAutoLembrete/Pods-MiAutoLembrete-resources.sh\"\n";
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-MiAuto/Pods-MiAuto-resources.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		CE2A92C6DA6C5146CCB5315F /* [Expo] Configure project */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/MiAutoLembrete/MiAutoLembrete.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-MiAutoLembrete/expo-configure-project.sh",
-			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-MiAutoLembrete/ExpoModulesProvider.swift",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-MiAutoLembrete/expo-configure-project.sh\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -332,7 +332,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				69781281000D82A5F7FB1CF1 /* ExpoModulesProvider.swift in Sources */,
+				D708CF4B0200E0D3860DA1F7 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -341,18 +341,18 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 41ECFA8E97521BBAE1A4CD6C /* Pods-MiAutoLembrete.debug.xcconfig */;
+			baseConfigurationReference = C18FD91334F0ED35BE134771 /* Pods-MiAuto.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = MiAutoLembrete/MiAutoLembrete.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MiAuto/MiAuto.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					"FB_SONARKIT_ENABLED=1",
 				);
-				INFOPLIST_FILE = MiAutoLembrete/Info.plist;
+				INFOPLIST_FILE = MiAuto/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -366,8 +366,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_DEBUG";
 				PRODUCT_BUNDLE_IDENTIFIER = com.miautolembrete.app;
-				PRODUCT_NAME = MiAutoLembrete;
-				SWIFT_OBJC_BRIDGING_HEADER = "MiAutoLembrete/MiAutoLembrete-Bridging-Header.h";
+				PRODUCT_NAME = MiAuto;
+				SWIFT_OBJC_BRIDGING_HEADER = "MiAuto/MiAuto-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -377,13 +377,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6D0112B55B08E7708559FFEC /* Pods-MiAutoLembrete.release.xcconfig */;
+			baseConfigurationReference = 529AC2B5D5B73F20F6273565 /* Pods-MiAuto.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
-				CODE_SIGN_ENTITLEMENTS = MiAutoLembrete/MiAutoLembrete.entitlements;
+				CODE_SIGN_ENTITLEMENTS = MiAuto/MiAuto.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
-				INFOPLIST_FILE = MiAutoLembrete/Info.plist;
+				INFOPLIST_FILE = MiAuto/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -397,8 +397,8 @@
 				);
 				OTHER_SWIFT_FLAGS = "$(inherited) -D EXPO_CONFIGURATION_RELEASE";
 				PRODUCT_BUNDLE_IDENTIFIER = com.miautolembrete.app;
-				PRODUCT_NAME = MiAutoLembrete;
-				SWIFT_OBJC_BRIDGING_HEADER = "MiAutoLembrete/MiAutoLembrete-Bridging-Header.h";
+				PRODUCT_NAME = MiAuto;
+				SWIFT_OBJC_BRIDGING_HEADER = "MiAuto/MiAuto-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -526,7 +526,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MiAutoLembrete" */ = {
+		13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "MiAuto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				13B07F941A680F5B00A75B9A /* Debug */,
@@ -535,7 +535,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MiAutoLembrete" */ = {
+		83CBB9FA1A601CBA00E9B192 /* Build configuration list for PBXProject "MiAuto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				83CBBA201A601CBA00E9B192 /* Debug */,
