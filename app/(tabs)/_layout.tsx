@@ -40,6 +40,13 @@ export default function TabsLayout() {
     return pathname.includes(route.replace('/(tabs)', ''));
   };
 
+  const handleTabPress = (route: string) => {
+    // Não navegar se já estiver na rota ativa
+    if (!isActive(route)) {
+      router.push(route as any);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -53,7 +60,7 @@ export default function TabsLayout() {
             <TouchableOpacity
               key={tab.name}
               style={styles.tabButton}
-              onPress={() => router.push(tab.route as any)}
+              onPress={() => handleTabPress(tab.route)}
               activeOpacity={0.7}
             >
               <View style={[styles.iconContainer, active && styles.iconContainerActive]}>
