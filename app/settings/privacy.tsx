@@ -11,9 +11,12 @@ import {
 import { Text } from '../components/StyledText';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function PrivacySettings() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
   const [crashReportsEnabled, setCrashReportsEnabled] = useState(false);
@@ -64,24 +67,24 @@ export default function PrivacySettings() {
 
   const clearAllData = () => {
     Alert.alert(
-      'Limpar Todos os Dados',
-      'Esta ação irá remover todos os dados do app, incluindo pets, tarefas e configurações. Esta ação não pode ser desfeita.',
+      t('clearAllData'),
+      t('clearDataWarning'),
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Limpar',
+          text: t('clear'),
           style: 'destructive',
           onPress: async () => {
             try {
               await AsyncStorage.clear();
-              Alert.alert('Sucesso', 'Todos os dados foram removidos.', [
+              Alert.alert(t('success'), t('allDataRemoved'), [
                 {
                   text: 'OK',
                   onPress: () => router.replace('/'),
                 },
               ]);
             } catch (error) {
-              Alert.alert('Erro', 'Não foi possível limpar os dados.');
+              Alert.alert(t('error'), t('couldNotClearData'));
             }
           },
         },
@@ -90,12 +93,13 @@ export default function PrivacySettings() {
   };
 
   return (
-    <View style={styles.container}>
+    <SwipeBackHandler>
+      <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🔒 Privacidade</Text>
+        <Text style={styles.headerTitle}>🔒 {t('privacy')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -106,15 +110,15 @@ export default function PrivacySettings() {
       >
         {/* Data */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💾 Dados</Text>
+          <Text style={styles.sectionTitle}>💾 {t('data')}</Text>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <Ionicons name="phone-portrait-outline" size={22} color="#6C63FF" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Armazenamento Local</Text>
+                <Text style={styles.settingTitle}>{t('localStorage')}</Text>
                 <Text style={styles.settingDescription}>
-                  Todos os dados ficam no seu dispositivo
+                  {t('allDataStaysOnDevice')}
                 </Text>
               </View>
             </View>
@@ -124,15 +128,15 @@ export default function PrivacySettings() {
 
         {/* Privacy */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 Privacidade</Text>
+          <Text style={styles.sectionTitle}>📊 {t('privacy')}</Text>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <Ionicons name="analytics-outline" size={22} color="#6C63FF" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Análise de Uso</Text>
+                <Text style={styles.settingTitle}>{t('usageAnalysis')}</Text>
                 <Text style={styles.settingDescription}>
-                  {analyticsEnabled ? 'Dados anônimos coletados' : 'Nenhum dado coletado'}
+                  {analyticsEnabled ? t('anonymousDataCollected') : t('noDataCollected')}
                 </Text>
               </View>
             </View>
@@ -165,7 +169,7 @@ export default function PrivacySettings() {
 
         {/* Danger Zone */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Zona de Perigo</Text>
+          <Text style={styles.sectionTitle}>{t('dangerZone')}</Text>
 
           <TouchableOpacity 
             style={[styles.settingItem, styles.dangerItem]}
@@ -194,7 +198,8 @@ export default function PrivacySettings() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </SwipeBackHandler>
   );
 }
 

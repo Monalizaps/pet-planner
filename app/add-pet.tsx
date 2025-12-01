@@ -20,8 +20,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function AddPet() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState<'dog' | 'cat' | 'bird' | 'other'>('dog');
@@ -54,7 +57,7 @@ export default function AddPet() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert('Nome obrigatório', 'Por favor, insira o nome do pet.');
+      Alert.alert(t('nameRequired'), t('pleaseEnterPetName'));
       return;
     }
 
@@ -98,12 +101,13 @@ export default function AddPet() {
   ] as const;
 
   return (
-    <ResponsiveContainer>
+    <SwipeBackHandler>
+      <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>🐾 Adicionar Pet</Text>
+        <Text style={styles.title}>🐾 {t('addPet')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -114,17 +118,17 @@ export default function AddPet() {
           ) : (
             <View style={styles.imagePlaceholder}>
               <Ionicons name="camera" size={40} color="#6C63FF" />
-              <Text style={styles.imagePlaceholderText}>Adicionar Foto</Text>
+              <Text style={styles.imagePlaceholderText}>{t('addPhoto')}</Text>
             </View>
           )}
         </TouchableOpacity>
 
-        <Text style={styles.label}>Nome do Pet *</Text>
+        <Text style={styles.label}>{t('petName')}</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder="Ex: Rex, Luna, Kiwi..."
+          placeholder={t('petNamePlaceholder')}
           placeholderTextColor="#999"
         />
 
@@ -152,16 +156,16 @@ export default function AddPet() {
           ))}
         </View>
 
-        <Text style={styles.label}>Raça</Text>
+        <Text style={styles.label}>{t('breed')}</Text>
         <TextInput
           style={styles.input}
           value={breed}
           onChangeText={setBreed}
-          placeholder="Ex: Labrador, Persa, Calopsita..."
+          placeholder={t('breedPlaceholder')}
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Data de Nascimento</Text>
+        <Text style={styles.label}>{t('birthDate')}</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -192,30 +196,30 @@ export default function AddPet() {
           />
         )}
 
-        <Text style={styles.label}>Peso</Text>
+        <Text style={styles.label}>{t('weight')}</Text>
         <TextInput
           style={styles.input}
           value={weight}
           onChangeText={setWeight}
-          placeholder="Ex: 5kg, 500g, 2.5kg..."
+          placeholder={t('weightPlaceholder')}
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Cor</Text>
+        <Text style={styles.label}>{t('color')}</Text>
         <TextInput
           style={styles.input}
           value={color}
           onChangeText={setColor}
-          placeholder="Ex: Marrom, Branco, Cinza..."
+          placeholder={t('colorPlaceholder')}
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Observações</Text>
+        <Text style={styles.label}>{t('notes')}</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={notes}
           onChangeText={setNotes}
-          placeholder="Informações adicionais, alergias, comportamento..."
+          placeholder={t('notesPlaceholder')}
           placeholderTextColor="#999"
           multiline
           numberOfLines={4}
@@ -223,12 +227,13 @@ export default function AddPet() {
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Salvar Pet</Text>
+          <Text style={styles.saveButtonText}>{t('savePet')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </View>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </SwipeBackHandler>
   );
 }
 

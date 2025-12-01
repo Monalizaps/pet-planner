@@ -14,8 +14,11 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { testNotification, checkExactAlarmPermission, debugScheduledNotifications } from '../utils/notifications';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function NotificationsSettings() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [taskReminders, setTaskReminders] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -98,12 +101,13 @@ export default function NotificationsSettings() {
   };
 
   return (
-    <View style={styles.container}>
+    <SwipeBackHandler>
+      <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🔔 Notificações</Text>
+        <Text style={styles.headerTitle}>🔔 {t('notifications')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -116,7 +120,7 @@ export default function NotificationsSettings() {
         <TouchableOpacity style={styles.permissionBanner} onPress={requestPermissions}>
           <Ionicons name="notifications-outline" size={24} color="#6C63FF" />
           <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.permissionTitle}>Permitir Notificações</Text>
+            <Text style={styles.permissionTitle}>{t('allowNotifications')}</Text>
             <Text style={styles.permissionText}>
               Toque para verificar permissões
             </Text>
@@ -151,15 +155,15 @@ export default function NotificationsSettings() {
 
         {/* Reminder Types */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tipos de Lembrete</Text>
+          <Text style={styles.sectionTitle}>{t('reminderTypes')}</Text>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <Ionicons name="clipboard-outline" size={22} color="#6C63FF" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Lembretes de Tarefas</Text>
+                <Text style={styles.settingTitle}>{t('taskReminders')}</Text>
                 <Text style={styles.settingDescription}>
-                  Receber notificações sobre tarefas agendadas
+                  {t('receiveNotificationsAboutTasks')}
                 </Text>
               </View>
             </View>
@@ -174,15 +178,15 @@ export default function NotificationsSettings() {
 
         {/* Sound & Vibration */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Som e Vibração</Text>
+          <Text style={styles.sectionTitle}>{t('soundAndVibration')}</Text>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
               <Ionicons name="volume-high-outline" size={22} color="#6C63FF" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Som</Text>
+                <Text style={styles.settingTitle}>{t('sound')}</Text>
                 <Text style={styles.settingDescription}>
-                  Tocar som nas notificações
+                  {t('playSoundOnNotifications')}
                 </Text>
               </View>
             </View>
@@ -198,9 +202,9 @@ export default function NotificationsSettings() {
             <View style={styles.settingLeft}>
               <Ionicons name="phone-portrait-outline" size={22} color="#6C63FF" />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Vibração</Text>
+                <Text style={styles.settingTitle}>{t('vibration')}</Text>
                 <Text style={styles.settingDescription}>
-                  Vibrar ao receber notificação
+                  {t('vibrateOnNotification')}
                 </Text>
               </View>
             </View>
@@ -222,7 +226,8 @@ export default function NotificationsSettings() {
           </Text>
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </SwipeBackHandler>
   );
 }
 

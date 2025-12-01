@@ -8,17 +8,21 @@ import {
 import { Text } from '../components/StyledText';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function TermsSettings() {
+  const { t } = useTranslation();
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <SwipeBackHandler>
+      <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>📄 Termos</Text>
+        <Text style={styles.headerTitle}>📄 {t('terms')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -29,96 +33,76 @@ export default function TermsSettings() {
       >
         {/* Terms of Service */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Termos de Serviço</Text>
+          <Text style={styles.sectionTitle}>{t('termsOfService')}</Text>
           <View style={styles.card}>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>Última atualização:</Text> 22 de novembro de 2025
+              <Text style={styles.bold}>{t('lastUpdated')}</Text> 22 de novembro de 2025
             </Text>
             
-            <Text style={styles.subtitle}>1. Aceitação dos Termos</Text>
+            <Text style={styles.subtitle}>1. {t('acceptanceOfTerms')}</Text>
             <Text style={styles.paragraph}>
-              Ao usar o Pet Planner, você concorda com estes termos de serviço. 
-              Se você não concorda, não deve usar o aplicativo.
+              {t('termsContent1')}
             </Text>
 
-            <Text style={styles.subtitle}>2. Uso do Serviço</Text>
+            <Text style={styles.subtitle}>2. {t('useOfService')}</Text>
             <Text style={styles.paragraph}>
-              O Pet Planner é um aplicativo de gerenciamento de cuidados com animais de estimação. 
-              Você é responsável por manter a confidencialidade da sua conta e por todas as 
-              atividades que ocorram sob sua conta.
+              {t('termsContent2')}
             </Text>
 
-            <Text style={styles.subtitle}>3. Conteúdo do Usuário</Text>
+            <Text style={styles.subtitle}>3. {t('userContent')}</Text>
             <Text style={styles.paragraph}>
-              Você mantém todos os direitos sobre as informações e fotos que adiciona ao app. 
-              Não compartilhamos seus dados com terceiros sem sua permissão explícita.
+              {t('termsContent3')}
             </Text>
 
-            <Text style={styles.subtitle}>4. Limitações</Text>
+            <Text style={styles.subtitle}>4. {t('limitations')}</Text>
             <Text style={styles.paragraph}>
-              O aplicativo não substitui cuidados veterinários profissionais. 
-              Sempre consulte um veterinário para questões de saúde do seu pet.
+              {t('termsContent4')}
             </Text>
 
-            <Text style={styles.subtitle}>5. Modificações</Text>
+            <Text style={styles.subtitle}>5. {t('modifications')}</Text>
             <Text style={styles.paragraph}>
-              Reservamo-nos o direito de modificar estes termos a qualquer momento. 
-              Notificaremos você sobre mudanças significativas.
+              {t('termsContent5')}
             </Text>
           </View>
         </View>
 
         {/* Privacy Policy */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Política de Privacidade</Text>
+          <Text style={styles.sectionTitle}>{t('privacyPolicy')}</Text>
           <View style={styles.card}>
-            <Text style={styles.subtitle}>1. Informações Coletadas</Text>
+            <Text style={styles.subtitle}>1. {t('informationCollected')}</Text>
             <Text style={styles.paragraph}>
-              Coletamos apenas as informações necessárias para fornecer nossos serviços:
-              {'\n'}• Nome e email do tutor
-              {'\n'}• Informações dos pets (nome, raça, idade, fotos)
-              {'\n'}• Dados de tarefas e registros de humor
+              {t('privacyContent1')}
             </Text>
 
-            <Text style={styles.subtitle}>2. Uso das Informações</Text>
+            <Text style={styles.subtitle}>2. {t('useOfInformation')}</Text>
             <Text style={styles.paragraph}>
-              Suas informações são usadas exclusivamente para:
-              {'\n'}• Fornecer funcionalidades do app
-              {'\n'}• Enviar notificações de tarefas
-              {'\n'}• Melhorar a experiência do usuário
+              {t('privacyContent2')}
             </Text>
 
-            <Text style={styles.subtitle}>3. Armazenamento de Dados</Text>
+            <Text style={styles.subtitle}>3. {t('dataStorage')}</Text>
             <Text style={styles.paragraph}>
-              Todos os dados são armazenados de forma segura no seu dispositivo. 
-              Se você ativar backup, os dados são criptografados antes de serem enviados para a nuvem.
+              {t('privacyContent3')}
             </Text>
 
-            <Text style={styles.subtitle}>4. Compartilhamento</Text>
+            <Text style={styles.subtitle}>4. {t('sharing')}</Text>
             <Text style={styles.paragraph}>
-              Não vendemos, alugamos ou compartilhamos suas informações pessoais com terceiros 
-              para fins de marketing. Dados anônimos podem ser usados para análises.
+              {t('privacyContent4')}
             </Text>
 
-            <Text style={styles.subtitle}>5. Seus Direitos</Text>
+            <Text style={styles.subtitle}>5. {t('yourRights')}</Text>
             <Text style={styles.paragraph}>
-              Você tem o direito de:
-              {'\n'}• Acessar seus dados
-              {'\n'}• Corrigir informações incorretas
-              {'\n'}• Solicitar exclusão de dados
-              {'\n'}• Exportar seus dados
+              {t('privacyContent5')}
             </Text>
 
-            <Text style={styles.subtitle}>6. Cookies e Tecnologias Similares</Text>
+            <Text style={styles.subtitle}>6. {t('cookiesAndSimilarTech')}</Text>
             <Text style={styles.paragraph}>
-              Usamos tecnologias locais de armazenamento apenas para manter você conectado 
-              e lembrar suas preferências.
+              {t('privacyContent6')}
             </Text>
 
-            <Text style={styles.subtitle}>7. Segurança</Text>
+            <Text style={styles.subtitle}>7. {t('security')}</Text>
             <Text style={styles.paragraph}>
-              Implementamos medidas de segurança para proteger suas informações, incluindo 
-              criptografia e autenticação biométrica opcional.
+              {t('privacyContent7')}
             </Text>
 
             <Text style={styles.subtitle}>8. Menores de Idade</Text>
@@ -144,7 +128,8 @@ export default function TermsSettings() {
           </View>
         </View>
       </ScrollView>
-    </View>
+      </View>
+    </SwipeBackHandler>
   );
 }
 

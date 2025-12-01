@@ -7,21 +7,31 @@ import {
   Image,
   Alert,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { Text } from '../components/StyledText';
 import { PetIcon, PawIcon } from '../components/PetIcons';
 import { useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Pet, Tutor } from '../types';
-import { getPets, deletePet } from '../services/storage';
+import { getPets, deletePet, exportAllData, importAllData } from '../services/storage';
 import { secureRetrieve } from '../services/security';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
+import i18n from 'i18next';
+import '../../i18n/i18n';
+import { useTranslation } from 'react-i18next';
+import { saveLanguage } from '../../i18n/i18n';
 
 const { width } = Dimensions.get('window');
 
 export default function Mais() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -34,14 +44,32 @@ export default function Mais() {
     setPets(petsData);
   };
 
+  const handleLanguageChange = async (language: string) => {
+    try {
+      await saveLanguage(language);
+      await i18n.changeLanguage(language);
+      setShowLanguageModal(false);
+      
+      // Aguardar um tempo para o i18n processar a mudança
+      setTimeout(() => {
+        // Navegar para forçar re-render de todas as telas
+        router.replace('/(tabs)/' as any);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error changing language:', error);
+      Alert.alert(t('error'), t('couldNotChangeLanguage'));
+    }
+  };
+
   const handleDeletePet = (petId: string, petName: string) => {
     Alert.alert(
-      'Remover Pet',
-      `Tem certeza que deseja remover ${petName}? Todas as tarefas e dados relacionados serão perdidos.`,
+      t('removePet'),
+      t('areYouSureRemovePet', { petName }),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: 'Remover',
+          text: t('remove'),
           style: 'destructive',
           onPress: async () => {
             await deletePet(petId);
@@ -68,13 +96,95 @@ export default function Mais() {
     return type;
   };
 
+  const handleExportData = async () => {
+    try {
+      Alert.alert(
+        t('exportData'),
+        t('exportDataDescription'),
+        [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('export'),
+            onPress: async () => {
+              try {
+                const jsonData = await exportAllData();
+                const fileName = `pet-planner-backup-${new Date().toISOString().split('T')[0]}.json`;
+                const fileUri = FileSystem.documentDirectory + fileName;
+                await FileSystem.writeAsStringAsync(fileUri, jsonData);
+                const canShare = await Sharing.isAvailableAsync();
+                if (canShare) {
+                  await Sharing.shareAsync(fileUri, {
+                    mimeType: 'application/json',
+                    dialogTitle: t('saveBackup'),
+                    UTI: 'public.json',
+                  });
+                  Alert.alert(t('success'), t('backupCreated'));
+                } else {
+                  Alert.alert(t('success'), t('fileSavedAt', { fileUri }));
+                }
+              } catch (error) {
+                console.error('Export error:', error);
+                Alert.alert(t('error'), t('couldNotExportData'));
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Export error:', error);
+      Alert.alert(t('error'), t('couldNotExportData'));
+    }
+  };
+
+  const handleImportData = async () => {
+    try {
+      Alert.alert(
+        t('importData'),
+        t('importDataWarning'),
+        [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('continue'),
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                const result = await DocumentPicker.getDocumentAsync({
+                  type: 'application/json',
+                  copyToCacheDirectory: true,
+                });
+                
+                if (result.canceled) {
+                  return;
+                }
+
+                const fileUri = result.assets[0].uri;
+                const fileContent = await FileSystem.readAsStringAsync(fileUri);
+                
+                await importAllData(fileContent);
+                await loadData();
+                
+                Alert.alert(t('success'), t('dataImported'));
+              } catch (error) {
+                console.error('Import error:', error);
+                Alert.alert(t('error'), t('couldNotImportData'));
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Import error:', error);
+      Alert.alert(t('error'), t('couldNotImportDataGeneral'));
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={styles.container}> 
       {/* Header */}
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <MaterialCommunityIcons name="cog" size={28} color="#fff" />
-          <Text style={styles.headerTitle}>Mais</Text>
+          <Text style={styles.headerTitle}>{t('more')}</Text>
         </View>
         <Image
           source={require('../../assets/ramster.png')}
@@ -90,7 +200,7 @@ export default function Mais() {
       >
         {/* Profile Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Perfil</Text>
+          <Text style={styles.sectionTitle}>{t('profile')}</Text>
           <TouchableOpacity
             style={styles.profileCard}
             onPress={() => router.push('/profile')}
@@ -113,7 +223,7 @@ export default function Mais() {
         {/* Pets Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Meus Pets</Text>
+            <Text style={styles.sectionTitle}>{t('myPets')}</Text>
             <TouchableOpacity
               style={styles.addPetButton}
               onPress={() => router.push('/add-pet')}
@@ -125,7 +235,7 @@ export default function Mais() {
           {pets.length === 0 ? (
             <View style={styles.emptyCard}>
               <PawIcon size={32} color="#999" />
-              <Text style={styles.emptyText}>Adicione seu primeiro pet</Text>
+              <Text style={styles.emptyText}>{t('addFirstPet')}</Text>
             </View>
           ) : (
             pets.map((pet) => (
@@ -141,7 +251,7 @@ export default function Mais() {
                   <View>
                     <Text style={styles.petName}>{pet.name}</Text>
                     <Text style={styles.petInfo}>
-                      {pet.breed} • {getPetAge(pet.birthDate)} {getPetAge(pet.birthDate) === 1 ? 'ano' : 'anos'}
+                      {pet.breed} • {getPetAge(pet.birthDate)} {getPetAge(pet.birthDate) === 1 ? t('year') : t('years')}
                     </Text>
                   </View>
                 </View>
@@ -172,7 +282,7 @@ export default function Mais() {
 
         {/* Settings Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Configurações</Text>
+          <Text style={styles.sectionTitle}>{t('settings')}</Text>
           
           <TouchableOpacity 
             style={styles.menuItem}
@@ -180,7 +290,7 @@ export default function Mais() {
           >
             <View style={styles.menuLeft}>
               <Ionicons name="notifications-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Notificações</Text>
+              <Text style={styles.menuText}>{t('notifications')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
@@ -191,26 +301,47 @@ export default function Mais() {
           >
             <View style={styles.menuLeft}>
               <Ionicons name="lock-closed-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Privacidade e Segurança</Text>
+              <Text style={styles.menuText}>{t('privacyAndSecurity')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.menuItem}
-            onPress={() => router.push('/settings/appearance')}
+            onPress={() => setShowLanguageModal(true)}
           >
             <View style={styles.menuLeft}>
-              <Ionicons name="color-palette-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Aparência</Text>
+              <Ionicons name="language-outline" size={22} color="#6C63FF" />
+              <Text style={styles.menuText}>{t('language')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
+
+          {/* Modal de seleção de idioma */}
+          {showLanguageModal && (
+            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.3)', justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '80%' }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 16 }}>{t('language')}</Text>
+                <TouchableOpacity onPress={() => handleLanguageChange('pt')} style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16 }}>{t('portuguese')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleLanguageChange('en')} style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16 }}>{t('english')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleLanguageChange('fr')} style={{ marginBottom: 12 }}>
+                  <Text style={{ fontSize: 16 }}>{t('french')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+                  <Text style={{ fontSize: 16, color: '#6C63FF', textAlign: 'right' }}>{t('cancel')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* About Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Sobre</Text>
+          <Text style={styles.sectionTitle}>{t('about')}</Text>
           
           <TouchableOpacity 
             style={styles.menuItem}
@@ -218,7 +349,7 @@ export default function Mais() {
           >
             <View style={styles.menuLeft}>
               <Ionicons name="help-circle-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Ajuda e Suporte</Text>
+              <Text style={styles.menuText}>{t('helpAndSupport')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
@@ -229,7 +360,7 @@ export default function Mais() {
           >
             <View style={styles.menuLeft}>
               <Ionicons name="document-text-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Termos e Privacidade</Text>
+              <Text style={styles.menuText}>{t('termsAndPrivacy')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
@@ -240,14 +371,41 @@ export default function Mais() {
           >
             <View style={styles.menuLeft}>
               <Ionicons name="information-circle-outline" size={22} color="#6C63FF" />
-              <Text style={styles.menuText}>Sobre o App</Text>
+              <Text style={styles.menuText}>{t('aboutApp')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Backup Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('backupAndRestore')}</Text>
+          
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleExportData}
+          >
+            <View style={styles.menuLeft}>
+              <Ionicons name="cloud-upload-outline" size={22} color="#4CAF50" />
+              <Text style={styles.menuText}>{t('exportData')}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#999" />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={handleImportData}
+          >
+            <View style={styles.menuLeft}>
+              <Ionicons name="cloud-download-outline" size={22} color="#FF9800" />
+              <Text style={styles.menuText}>{t('importData')}</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
         </View>
 
         {/* Version */}
-        <Text style={styles.version}>Versão 1.0.0</Text>
+        <Text style={styles.version}>{t('version')} 1.0.0</Text>
       </ScrollView>
     </View>
   );

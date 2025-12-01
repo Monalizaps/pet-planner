@@ -9,16 +9,18 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Pet, Task } from '../types';
-import { getPets, getTasks, deleteTask, toggleTaskCompletion, deletePet } from '../services/storage';
+import { Pet, Task, MoodEntry } from '../types';
+import { getPets, getTasks, deleteTask, toggleTaskCompletion, deletePet, getMoodEntries } from '../services/storage';
 import { cancelTaskNotification } from '../utils/notifications';
 import { Ionicons } from '@expo/vector-icons';
+import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function PetDetails() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [pet, setPet] = useState<Pet | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [moodEntries, setMoodEntries] = useState<MoodEntry[]>([]);
 
   useEffect(() => {
     loadData();
@@ -31,6 +33,22 @@ export default function PetDetails() {
 
     const petTasks = await getTasks(id);
     setTasks(petTasks.sort((a, b) => a.dateTime.getTime() - b.dateTime.getTime()));
+
+    // Carregar últimas 5 entradas de humor
+    try {
+      const allMoodEntries = await getMoodEntries(id || '');
+      console.log('🔍 Entradas de humor encontradas:', allMoodEntries.length);
+      console.log('🔍 Primeira entrada:', allMoodEntries[0]);
+      
+      const recentMoods = allMoodEntries
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5);
+      console.log('🔍 Entradas recentes:', recentMoods);
+      setMoodEntries(recentMoods);
+    } catch (error) {
+      console.error('❌ Erro ao carregar humor:', error);
+      setMoodEntries([]);
+    }
   };
 
   const handleToggleTask = async (taskId: string) => {
@@ -132,7 +150,8 @@ export default function PetDetails() {
   }
 
   return (
-    <View style={styles.container}>
+    <SwipeBackHandler>
+      <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -229,6 +248,60 @@ export default function PetDetails() {
           </View>
         </View>
 
+        {/* Seção de Humor */}
+        {moodEntries.length > 0 && (
+          <View style={styles.moodSection}>
+            <View style={styles.moodSectionHeader}>
+              <Text style={styles.moodTitle}>
+                😊 Humor Recente
+              </Text>
+              <Text style={styles.moodSubtitle}>
+                Últimos {moodEntries.length} registros
+              </Text>
+            </View>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.moodScroll}>
+              {moodEntries.map((entry, index) => (
+                <View key={entry.id} style={styles.moodCard}>
+                  <View style={styles.moodHeader}>
+                    <Text style={styles.moodDate}>
+                      {new Date(entry.date).toLocaleDateString('pt-BR', { 
+                        day: '2-digit', 
+                        month: '2-digit' 
+                      })}
+                    </Text>
+                    <Text style={styles.moodEmoji}>
+                      {entry.mood === 'feliz' ? '😊' : 
+                       entry.mood === 'calmo' ? '😌' : 
+                       entry.mood === 'ansioso' ? '😰' : 
+                       entry.mood === 'triste' ? '😢' : 
+                       entry.mood === 'irritado' ? '😠' : '⚡'}
+                    </Text>
+                  </View>
+                  
+                  {entry.notes && (
+                    <View style={styles.moodNotesContainer}>
+                      <Text style={styles.moodNotesLabel}>📝 Anotações:</Text>
+                      <Text style={styles.moodNotes} numberOfLines={3}>
+                        {entry.notes}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  {entry.symptoms && entry.symptoms.length > 0 && (
+                    <View style={styles.moodSymptomsContainer}>
+                      <Text style={styles.moodSymptomsLabel}>🎡 Sintomas:</Text>
+                      <Text style={styles.moodSymptoms} numberOfLines={2}>
+                        {entry.symptoms.length} sintoma(s)
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* Lista de Tarefas */}
         <View style={styles.tasksSection}>
           <View style={styles.tasksSectionHeader}>
@@ -295,7 +368,8 @@ export default function PetDetails() {
 
         <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+      </View>
+    </SwipeBackHandler>
   );
 }
 
@@ -549,5 +623,88 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 8,
+  },
+  moodSection: {
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 20,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  moodSectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  moodTitle: {
+    fontSize: 18,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#333',
+  },
+  moodSubtitle: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#666',
+  },
+  moodScroll: {
+    marginHorizontal: -4,
+  },
+  moodCard: {
+    backgroundColor: '#F8F9FD',
+    borderRadius: 12,
+    padding: 12,
+    marginHorizontal: 4,
+    width: 160,
+    borderWidth: 1,
+    borderColor: '#E8E6FF',
+  },
+  moodHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  moodDate: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#666',
+  },
+  moodEmoji: {
+    fontSize: 20,
+  },
+  moodNotesContainer: {
+    marginBottom: 8,
+  },
+  moodNotesLabel: {
+    fontSize: 10,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#6C63FF',
+    marginBottom: 4,
+  },
+  moodNotes: {
+    fontSize: 11,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#333',
+    lineHeight: 14,
+  },
+  moodSymptomsContainer: {
+    marginTop: 4,
+  },
+  moodSymptomsLabel: {
+    fontSize: 10,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#FF9800',
+    marginBottom: 2,
+  },
+  moodSymptoms: {
+    fontSize: 10,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#666',
   },
 });

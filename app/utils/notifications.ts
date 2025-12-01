@@ -3,6 +3,7 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { getTasks } from '../services/storage';
+import i18n from '../../i18n/i18n';
 
 // Função para carregar configurações
 async function getNotificationSettings() {
@@ -31,6 +32,8 @@ Notifications.setNotificationHandler({
         shouldShowAlert: false,
         shouldPlaySound: false,
         shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
       };
     }
 
@@ -42,6 +45,8 @@ Notifications.setNotificationHandler({
       shouldShowAlert: isScheduled,
       shouldPlaySound: isScheduled && settings.soundEnabled,
       shouldSetBadge: false,
+      shouldShowBanner: isScheduled,
+      shouldShowList: isScheduled,
     };
   },
 });
@@ -240,7 +245,7 @@ export async function scheduleTaskNotification(
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🐾 Pet Planner - Lembrete',
+        title: `🐾 Pet Planner - ${i18n.t('reminder')}`,
         body: taskTitle,
         data: { 
           taskId,
@@ -334,7 +339,7 @@ export async function debugScheduledNotifications() {
       console.log('🗓️ [DEBUG] Notificação:', {
         id: n.identifier,
         trigger: n.trigger,
-        title: n.request.content.title,
+        title: n.content.title,
       });
     }
     Alert.alert('Fila', `Total programadas: ${list.length}`);

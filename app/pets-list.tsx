@@ -13,8 +13,11 @@ import { Pet } from './types';
 import { getPets } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function PetsListScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
 
@@ -41,7 +44,8 @@ export default function PetsListScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SwipeBackHandler>
+      <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -79,7 +83,7 @@ export default function PetsListScreen() {
               style={styles.emptyButton}
               onPress={() => router.push('/add-pet')}
             >
-              <Text style={styles.emptyButtonText}>+ Adicionar Pet</Text>
+              <Text style={styles.emptyButtonText}>+ {t('addPet')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -115,7 +119,8 @@ export default function PetsListScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+      </View>
+    </SwipeBackHandler>
   );
 }
 

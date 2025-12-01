@@ -8,6 +8,7 @@ import {
   sanitizeString,
   checkRateLimit,
 } from './security';
+import i18n from '../../i18n/i18n';
 
 const PETS_KEY = '@pet_planner_pets';
 const TASKS_KEY = '@pet_planner_tasks';
@@ -255,8 +256,13 @@ export const AVAILABLE_SYMPTOMS: MoodSymptom[] = [
 
 export async function getMoodEntries(petId?: string): Promise<MoodEntry[]> {
   try {
+    console.log('📖 Carregando entradas de humor para petId:', petId);
     const data = await secureRetrieve(MOODS_KEY);
-    if (!data) return [];
+    console.log('📖 Dados brutos do storage:', data);
+    if (!data) {
+      console.log('📖 Nenhum dado encontrado no storage');
+      return [];
+    }
     
     const entries = data.map((m: any) => ({
       ...m,
@@ -264,27 +270,47 @@ export async function getMoodEntries(petId?: string): Promise<MoodEntry[]> {
       createdAt: new Date(m.createdAt),
     }));
     
-    return petId ? entries.filter((e: MoodEntry) => e.petId === petId) : entries;
+    console.log('📖 Entradas processadas:', entries.length);
+    entries.forEach((entry, index) => {
+      console.log(`📖 Entrada ${index}:`, {
+        id: entry.id,
+        petId: entry.petId,
+        mood: entry.mood,
+        notes: entry.notes,
+        date: entry.date
+      });
+    });
+    
+    const filteredEntries = petId ? entries.filter((e: MoodEntry) => e.petId === petId) : entries;
+    console.log('📖 Entradas filtradas para o pet:', filteredEntries.length);
+    
+    return filteredEntries;
   } catch (error) {
-    console.error('Error loading mood entries:', error);
+    console.error('❌ Erro ao carregar entradas de humor:', error);
     return [];
   }
 }
 
 export async function saveMoodEntry(entry: MoodEntry): Promise<void> {
   try {
+    console.log('🏪 Salvando entrada no storage:', entry);
     const entries = await getMoodEntries();
+    console.log('🏪 Entradas existentes:', entries.length);
     const existingIndex = entries.findIndex((e) => e.id === entry.id);
     
     if (existingIndex >= 0) {
+      console.log('🏪 Atualizando entrada existente no índice:', existingIndex);
       entries[existingIndex] = entry;
     } else {
+      console.log('🏪 Adicionando nova entrada');
       entries.push(entry);
     }
     
+    console.log('🏪 Total de entradas após salvar:', entries.length);
     await secureStore(MOODS_KEY, entries);
+    console.log('🏪 Entrada salva com sucesso no AsyncStorage');
   } catch (error) {
-    console.error('Error saving mood entry:', error);
+    console.error('❌ Erro ao salvar entrada no storage:', error);
     throw error;
   }
 }
@@ -382,17 +408,17 @@ export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
     
     if (negativeRatio > 0.6) {
       alertLevel = 'alerta';
-      message = '⚠️ Seu pet tem apresentado humor negativo com frequência. Considere consultar um veterinário.';
+      message = `⚠️ ${i18n.t('alertNegativeMood')}`;
     } else if (negativeRatio > 0.4) {
       alertLevel = 'atencao';
-      message = '⚡ Seu pet tem tido dias difíceis. Fique atento ao comportamento dele.';
+      message = `⚡ ${i18n.t('attentionDifficultDays')}`;
     } else if (positiveCount > negativeCount * 2) {
-      message = '🌟 Seu pet está muito feliz! Continue assim!';
+      message = `🌟 ${i18n.t('veryHappyPet')}`;
     }
   } else if (totalCount > 0) {
-    message = '📊 Continue registrando o humor diário para análises mais precisas.';
+    message = `📊 ${i18n.t('continueDaily')} ${i18n.t('dailyMoodTip')}.`;
   } else {
-    message = '🐾 Comece a registrar o humor do seu pet para acompanhar o bem-estar dele!';
+    message = `🐾 ${i18n.t('startTrackingMood')}`;
   }
   
   return {
@@ -403,4 +429,69 @@ export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
     commonSymptoms,
     symptomScore,
   };
+}
+
+// ===== BACKUP & RESTORE =====
+
+export interface BackupData {
+  version: string;
+  exportDate: string;
+  pets: Pet[];
+  tasks: Task[];
+  moods: MoodEntry[];
+  tutor: any;
+}
+
+export async function exportAllData(): Promise<string> {
+  try {
+    const pets = await getPets();
+    const tasks = await getTasks();
+    const moods = await getMoodEntries();
+    const tutor = await secureRetrieve('tutor_profile');
+    
+    const backup: BackupData = {
+      version: '1.0.0',
+      exportDate: new Date().toISOString(),
+      pets,
+      tasks,
+      moods,
+      tutor,
+    };
+    
+    return JSON.stringify(backup, null, 2);
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    throw new Error('Erro ao exportar dados');
+  }
+}
+
+export async function importAllData(jsonString: string): Promise<void> {
+  try {
+    const backup: BackupData = JSON.parse(jsonString);
+    
+    // Validar estrutura básica
+    if (!backup.version || !backup.exportDate) {
+      throw new Error('Arquivo de backup inválido');
+    }
+    
+    // Restaurar dados
+    if (backup.pets && Array.isArray(backup.pets)) {
+      await secureStore(PETS_KEY, backup.pets);
+    }
+    
+    if (backup.tasks && Array.isArray(backup.tasks)) {
+      await secureStore(TASKS_KEY, backup.tasks);
+    }
+    
+    if (backup.moods && Array.isArray(backup.moods)) {
+      await secureStore(MOODS_KEY, backup.moods);
+    }
+    
+    if (backup.tutor) {
+      await secureStore('tutor_profile', backup.tutor);
+    }
+  } catch (error) {
+    console.error('Error importing data:', error);
+    throw new Error('Erro ao importar dados. Verifique se o arquivo é válido.');
+  }
 }

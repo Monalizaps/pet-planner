@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   Image,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -16,8 +17,11 @@ import { getPets, savePet } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function EditPet() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   
@@ -115,12 +119,13 @@ export default function EditPet() {
   }
 
   return (
-    <ResponsiveContainer>
+    <SwipeBackHandler>
+      <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Pet</Text>
+        <Text style={styles.headerTitle}>{t('editPet')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -261,7 +266,7 @@ export default function EditPet() {
             style={[styles.input, styles.textArea]}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Informações adicionais, alergias, comportamento..."
+            placeholder={t('additionalInfoPlaceholder')}
             placeholderTextColor="#999"
             multiline
             numberOfLines={4}
@@ -271,12 +276,13 @@ export default function EditPet() {
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Ionicons name="checkmark-circle" size={24} color="#fff" />
-          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+          <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
       </View>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </SwipeBackHandler>
   );
 }
 

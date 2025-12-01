@@ -18,8 +18,11 @@ import { scheduleTaskNotification, cancelTaskNotification } from './utils/notifi
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
+import { useTranslation } from 'react-i18next';
+import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function EditTask() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
 
@@ -153,10 +156,10 @@ export default function EditTask() {
   };
 
   const recurringOptions = [
-    { value: undefined, label: 'Única vez', icon: '📅' },
-    { value: 'daily', label: 'Diária', icon: '🔄' },
-    { value: 'weekly', label: 'Semanal', icon: '📆' },
-    { value: 'monthly', label: 'Mensal', icon: '🗓️' },
+    { value: undefined, label: t('onceOnly'), icon: '📅' },
+    { value: 'daily', label: t('daily'), icon: '🔄' },
+    { value: 'weekly', label: t('weekly'), icon: '📆' },
+    { value: 'monthly', label: t('monthly'), icon: '🗟️' },
   ] as const;
 
   if (!task) {
@@ -174,39 +177,40 @@ export default function EditTask() {
   }
 
   return (
-    <ResponsiveContainer>
+    <SwipeBackHandler>
+      <ResponsiveContainer>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>✏️ Editar Tarefa</Text>
+        <Text style={styles.title}>✏️ {t('editTask')}</Text>
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.label}>Título</Text>
+        <Text style={styles.label}>{t('title')}</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
-          placeholder="Ex: Dar comida, Levar ao veterinário..."
+          placeholder={t('titlePlaceholder')}
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>Descrição (opcional)</Text>
+        <Text style={styles.label}>{t('descriptionOptional')}</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={description}
           onChangeText={setDescription}
-          placeholder="Adicione detalhes sobre a tarefa..."
+          placeholder={t('taskDetailsPlaceholder')}
           placeholderTextColor="#999"
           multiline
           numberOfLines={3}
         />
 
-        <Text style={styles.label}>Data</Text>
+        <Text style={styles.label}>{t('date')}</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -230,7 +234,7 @@ export default function EditTask() {
           />
         )}
 
-        <Text style={styles.label}>Horário</Text>
+        <Text style={styles.label}>{t('time')}</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowTimePicker(true)}
@@ -242,7 +246,7 @@ export default function EditTask() {
                   hour: '2-digit',
                   minute: '2-digit',
                 })
-              : 'Selecionar horário'}
+              : t('selectTime')}
           </Text>
         </TouchableOpacity>
 
@@ -256,7 +260,7 @@ export default function EditTask() {
           />
         )}
 
-        <Text style={styles.label}>Recorrência</Text>
+        <Text style={styles.label}>{t('recurrence')}</Text>
         <View style={styles.recurringContainer}>
           {recurringOptions.map((option) => (
             <TouchableOpacity
@@ -281,11 +285,12 @@ export default function EditTask() {
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
+          <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
         </TouchableOpacity>
         <View style={{ height: 40 }} />
       </View>
-    </ResponsiveContainer>
+      </ResponsiveContainer>
+    </SwipeBackHandler>
   );
 }
 

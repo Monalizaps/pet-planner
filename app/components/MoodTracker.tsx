@@ -7,6 +7,11 @@ import {
   ScrollView,
   Alert,
   useWindowDimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from 'react-native';
 import { Text } from './StyledText';
 import { MoodIcon, PetIcon, PawIcon } from './PetIcons';
@@ -18,49 +23,81 @@ import {
   analyzeMood, 
   AVAILABLE_SYMPTOMS 
 } from '../services/storage';
+import { generateMoodPDF } from '../services/pdfGenerator';
 import { v4 as uuid } from 'uuid';
+import { useTranslation } from 'react-i18next';
 
 interface MoodTrackerProps {
   pets: Pet[];
   onMoodUpdated?: () => void;
+  initialPetIndex?: number;
 }
 
-const MOODS: { type: MoodType; label: string; color: string }[] = [
-  { type: 'feliz', label: 'Feliz', color: '#FFD93D' },
-  { type: 'calmo', label: 'Calmo', color: '#A8D5BA' },
-  { type: 'ansioso', label: 'Ansioso', color: '#FFA500' },
-  { type: 'triste', label: 'Triste', color: '#B8B8FF' },
-  { type: 'irritado', label: 'Irritado', color: '#FF6B6B' },
-  { type: 'energetico', label: 'Energético', color: '#95E1D3' },
+const getMoods = (t: any): { type: MoodType; label: string; color: string }[] => [
+  { type: 'feliz', label: t('happy'), color: '#FFD93D' },
+  { type: 'calmo', label: t('calm'), color: '#A8D5BA' },
+  { type: 'ansioso', label: t('anxious'), color: '#FFA500' },
+  { type: 'triste', label: t('sad'), color: '#B8B8FF' },
+  { type: 'irritado', label: t('irritated'), color: '#FF6B6B' },
+  { type: 'energetico', label: t('energetic'), color: '#95E1D3' },
 ];
 
-export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
+export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTrackerProps) {
+  const { t } = useTranslation();
   const { width } = useWindowDimensions();
+  const MOODS = getMoods(t);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [summaryModalVisible, setSummaryModalVisible] = useState(false);
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [notes, setNotes] = useState<string>('');
   const [analysis, setAnalysis] = useState<MoodAnalysis | null>(null);
   const [todayEntry, setTodayEntry] = useState<MoodEntry | null>(null);
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Estilos dinâmicos baseados na largura da tela
+  const screenPadding = 40; // Padding do container (20px cada lado)
+  const availableWidth = width - screenPadding;
+  
+  // Gráfico responsivo: 60% da largura disponível, com min/max
+  const chartSize = Math.max(180, Math.min(availableWidth * 0.6, 220));
+  const chartCenterSize = chartSize * 0.68;
+  const scoreFontSize = chartCenterSize * 0.35;
+
   const dynamicStyles = {
     moodButton: {
-      width: Math.max(80, (width - 80) / 3), // Mínimo 80px
+      width: Math.max(80, (width - 80) / 3),
     },
+    chartSize,
+    chartCenterSize,
+    scoreFontSize,
   };
 
   useEffect(() => {
     if (pets.length > 0) {
-      loadMoodData(pets[0]);
+      const index = initialPetIndex !== undefined && initialPetIndex >= 0 && initialPetIndex < pets.length 
+        ? initialPetIndex 
+        : 0;
+      loadMoodData(pets[index]);
     }
-  }, [pets]);
+  }, [pets, initialPetIndex]);
 
   const loadMoodData = async (pet: Pet) => {
     setSelectedPet(pet);
     const entry = await getTodayMoodEntry(pet.id);
     setTodayEntry(entry);
+    
+    // Carregar dados existentes se houver
+    if (entry) {
+      setSelectedMood(entry.mood);
+      setSelectedSymptoms(entry.symptoms);
+      setNotes(entry.notes || '');
+    } else {
+      setSelectedMood(null);
+      setSelectedSymptoms([]);
+      setNotes('');
+    }
     
     const moodAnalysis = await analyzeMood(pet.id);
     setAnalysis(moodAnalysis);
@@ -75,19 +112,40 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
       date: new Date(),
       mood: selectedMood,
       symptoms: selectedSymptoms,
+      notes: notes.trim() || undefined,
       createdAt: new Date(),
     };
 
+    console.log('💾 Salvando entrada de humor:', entry);
+    console.log('💾 Notes sendo salvas:', notes.trim());
+
     try {
       await saveMoodEntry(entry);
+      console.log('✅ Entrada salva com sucesso!');
       setModalVisible(false);
       setSelectedMood(null);
       setSelectedSymptoms([]);
+      setNotes('');
       await loadMoodData(selectedPet);
       onMoodUpdated?.();
-      Alert.alert('Sucesso', 'Humor registrado com sucesso! 💚');
+      Alert.alert(t('success'), t('moodRegistered'));
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível salvar o humor.');
+      console.error('❌ Erro ao salvar entrada:', error);
+      Alert.alert(t('error'), t('couldNotSaveMood'));
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!selectedPet || !analysis) return;
+    
+    setGeneratingPDF(true);
+    try {
+      await generateMoodPDF(selectedPet, analysis, t);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      Alert.alert(t('error'), t('couldNotGeneratePDF'));
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -234,67 +292,112 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
         onPress={() => setSummaryModalVisible(true)}
         activeOpacity={0.9}
       >
-        <View style={styles.modernChart}>
-          {/* Círculo com gradiente de cores proporcional */}
-          <View style={styles.circularChart}>
-            {/* Anel externo com cores proporcionais */}
-            <View style={styles.colorRing}>
-              {moodAngles.map(({ mood, percentage }, index) => {
-                // Calcular o tamanho do segmento baseado na porcentagem
-                const widthPercent = percentage;
-                
-                return (
-                  <View
-                    key={mood.type}
-                    style={[
-                      styles.ringSegmentProportional,
-                      {
-                        backgroundColor: mood.color,
-                        width: `${widthPercent}%`,
-                      }
-                    ]}
-                  />
-                );
-              })}
+        <View style={[styles.modernChart, { width: dynamicStyles.chartSize, height: dynamicStyles.chartSize }]}>
+          {/* Gráfico de Pizza Circular */}
+          <View style={[styles.circularChart, { width: dynamicStyles.chartSize, height: dynamicStyles.chartSize }]}>
+            {/* SVG-like Pizza Chart usando Views */}
+            <View style={[styles.pizzaChart, { 
+              width: dynamicStyles.chartSize, 
+              height: dynamicStyles.chartSize,
+              borderRadius: dynamicStyles.chartSize / 2 
+            }]}>
+              {(() => {
+                let cumulativePercentage = 0;
+                return moodAngles.map(({ mood, percentage }, index) => {
+                  const startDegree = (cumulativePercentage / 100) * 360;
+                  const sweepDegree = (percentage / 100) * 360;
+                  cumulativePercentage += percentage;
+                  
+                  // Criar segmentos de pizza usando clip
+                  const isLargeArc = sweepDegree > 180;
+                  
+                  return (
+                    <View
+                      key={mood.type}
+                      style={[
+                        styles.pizzaSlice,
+                        {
+                          width: dynamicStyles.chartSize,
+                          height: dynamicStyles.chartSize,
+                          transform: [{ rotate: `${startDegree - 90}deg` }],
+                        }
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.pizzaSliceFill,
+                          {
+                            width: dynamicStyles.chartSize / 2,
+                            height: dynamicStyles.chartSize,
+                            left: dynamicStyles.chartSize / 2,
+                            backgroundColor: mood.color,
+                            transform: [
+                              { rotate: isLargeArc ? '180deg' : `${sweepDegree}deg` }
+                            ],
+                          }
+                        ]}
+                      />
+                      {isLargeArc && (
+                        <View
+                          style={[
+                            styles.pizzaSliceFill,
+                            {
+                              width: dynamicStyles.chartSize / 2,
+                              height: dynamicStyles.chartSize,
+                              left: dynamicStyles.chartSize / 2,
+                              backgroundColor: mood.color,
+                              transform: [{ rotate: `${sweepDegree - 180}deg` }],
+                            }
+                          ]}
+                        />
+                      )}
+                    </View>
+                  );
+                });
+              })()}
             </View>
             
             {/* Centro branco com score */}
-            <View style={styles.modernChartCenter}>
-              <Text style={styles.modernScoreText}>{averageScoreFormatted}</Text>
-              <Text style={styles.modernScoreLabel}>pontuação de saúde</Text>
+            <View style={[styles.modernChartCenter, {
+              width: dynamicStyles.chartCenterSize,
+              height: dynamicStyles.chartCenterSize,
+              borderRadius: dynamicStyles.chartCenterSize / 2,
+            }]}>
+              <Text style={[styles.modernScoreText, { fontSize: dynamicStyles.scoreFontSize }]}>{averageScoreFormatted}</Text>
+              <Text style={styles.modernScoreLabel}>{t('healthScore')}</Text>
             </View>
-          </View>
-
-          {/* Legendas com emojis */}
-          <View style={styles.moodLegends}>
-            {moodAngles.map(({ mood, percentage }) => (
-              <View key={mood.type} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: mood.color }]}>
-                  <Text style={styles.legendEmoji}>
-                    {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
-                  </Text>
-                </View>
-                <Text style={styles.legendText}>
-                  {mood.label} {percentage.toFixed(0)}%
-                </Text>
-              </View>
-            ))}
           </View>
         </View>
 
-        {/* Informação sobre a pontuação */}
+        {/* Legendas com emojis */}
+        <View style={styles.moodLegends}>
+          {moodAngles.map(({ mood, percentage }) => (
+            <View key={mood.type} style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: mood.color }]}>
+                <Text style={styles.legendEmoji}>
+                  {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
+                </Text>
+              </View>
+              <Text style={styles.legendText}>
+                {mood.label} {percentage.toFixed(0)}%
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Informação sobre o score */}
         <View style={styles.healthScoreInfo}>
           <View style={styles.infoIcon}>
             <Ionicons name="information-circle" size={20} color="#B8A4E8" />
           </View>
           <View style={styles.infoTextContainer}>
-            <Text style={styles.infoTitle}>Como funciona a pontuação?</Text>
+            <Text style={styles.infoTitle}>{t('howItWorks')}</Text>
             <Text style={styles.infoText}>
-              Cada humor tem um valor: Feliz (10), Energético (9), Calmo (8), Ansioso (5), Triste (3) e Irritado (2). 
-              Sintomas positivos (✅) aumentam +0.5 e negativos (❌) reduzem -0.5 por ocorrência. A pontuação final é a média combinada.
+              <Text style={styles.infoBold}>{t('chart')}:</Text> {t('chartDescription')}{'\n\n'}
+              <Text style={styles.infoBold}>{t('score')}:</Text> {t('scoreDescription')}
             </Text>
             <Text style={styles.infoDisclaimer}>
-              ⚠️ Esta pontuação não substitui consultas veterinárias. Variações de humor são normais e dependem da personalidade do seu pet.
+              ⚠️ {t('analysisWarning')}
             </Text>
           </View>
         </View>
@@ -305,11 +408,11 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
   if (pets.length === 0) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container}> 
       {/* Seletor de Pets */}
       {pets.length > 1 && (
         <View style={styles.petSelector}>
-          <Text style={styles.petSelectorLabel}>Selecione o pet:</Text>
+          <Text style={styles.petSelectorLabel}>{t('selectPet')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petSelectorScroll}>
             {pets.map(pet => (
               <TouchableOpacity
@@ -342,9 +445,9 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
           </View>
           <View>
             <Text style={styles.title}>
-              {selectedPet ? `Humor de ${selectedPet.name}` : 'Como está seu pet hoje?'}
+              {selectedPet ? `${t('moodOf')} ${selectedPet.name}` : 'Como está seu pet hoje?'}
             </Text>
-            <Text style={styles.subtitle}>Registre o humor diário</Text>
+            <Text style={styles.subtitle}>{t('registerDailyMood')}</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -356,7 +459,13 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
       </View>
 
       {todayEntry && (
-        <View style={styles.todayBadge}>
+        <View style={[
+          styles.todayBadge,
+          { 
+            backgroundColor: (MOODS.find(m => m.type === todayEntry.mood)?.color || '#E8F5E9') + '20',
+            borderLeftColor: MOODS.find(m => m.type === todayEntry.mood)?.color || '#4CAF50'
+          }
+        ]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <Text style={styles.todayBadgeText}>Hoje:</Text>
             <Text style={styles.todayBadgeText}>
@@ -381,7 +490,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
           {analysis.commonSymptoms.length > 0 && (
             <View style={styles.symptomsSection}>
-              <Text style={styles.symptomsTitle}>Sintomas mais frequentes:</Text>
+              <Text style={styles.symptomsTitle}>{t('mostFrequentSymptoms')}:</Text>
               {analysis.commonSymptoms.map((symptom, index) => (
                 <Text key={index} style={styles.symptomItem}>• {symptom}</Text>
               ))}
@@ -397,16 +506,24 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
         animationType="slide"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Registrar Humor</Text>
+              <Text style={styles.modalTitle}>{t('registerMood')}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={28} color="#666" />
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalContent}>
+            <ScrollView 
+              style={styles.modalContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContentContainer}
+              bounces={false}
+            >
               {/* Seletor de Pet */}
               {pets.length > 1 && (
                 <View style={styles.section}>
@@ -430,7 +547,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
               {/* Seletor de Humor */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Como está {selectedPet?.name}?</Text>
+                <Text style={styles.sectionTitle}>{t('howIs')} {selectedPet?.name}?</Text>
                 <View style={styles.moodGrid}>
                   {MOODS.map(mood => (
                     <TouchableOpacity
@@ -452,11 +569,31 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                 </View>
               </View>
 
+              {/* Campo de Anotações */}
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('notes')} ({t('optional')})</Text>
+                <TextInput
+                  style={styles.notesInput}
+                  placeholder={t('notesPlaceholder')}
+                  value={notes}
+                  onChangeText={setNotes}
+                  multiline
+                  numberOfLines={3}
+                  maxLength={500}
+                  textAlignVertical="top"
+                  blurOnSubmit={false}
+                  keyboardType="default"
+                  returnKeyType="default"
+                  scrollEnabled={true}
+                />
+                <Text style={styles.characterCount}>{notes.length}/500</Text>
+              </View>
+
               {/* Sintomas */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Sintomas (opcional)</Text>
+                <Text style={styles.sectionTitle}>{t('symptoms')} ({t('optional')})</Text>
                 
-                <Text style={styles.categoryTitle}>Físicos</Text>
+                <Text style={styles.categoryTitle}>{t('physical')}</Text>
                 <View style={styles.symptomsGrid}>
                   {AVAILABLE_SYMPTOMS.filter(s => s.category === 'fisico').map(symptom => (
                     <TouchableOpacity
@@ -477,7 +614,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                   ))}
                 </View>
 
-                <Text style={styles.categoryTitle}>Comportamentais</Text>
+                <Text style={styles.categoryTitle}>{t('behavioral')}</Text>
                 <View style={styles.symptomsGrid}>
                   {AVAILABLE_SYMPTOMS.filter(s => s.category === 'comportamental').map(symptom => (
                     <TouchableOpacity
@@ -505,10 +642,12 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
               onPress={handleSaveMood}
               disabled={!selectedMood}
             >
-              <Text style={styles.saveButtonText}>Salvar Registro</Text>
+              <Text style={styles.saveButtonText}>{t('saveRecord')}</Text>
             </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
           </View>
-        </View>
+        </TouchableWithoutFeedback>
       </Modal>
 
       {/* Modal de Resumo Detalhado */}
@@ -522,7 +661,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                📊 Resumo de {selectedPet?.name}
+                📊 {t('summaryOf')} {selectedPet?.name}
               </Text>
               <TouchableOpacity onPress={() => setSummaryModalVisible(false)}>
                 <Ionicons name="close" size={28} color="#666" />
@@ -541,7 +680,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                       <View style={styles.statusHeader}>
                         <Text style={styles.statusEmoji}>{summary.statusEmoji}</Text>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.statusTitle}>Status Geral</Text>
+                          <Text style={styles.statusTitle}>{t('generalStatus')}</Text>
                           <Text style={[styles.statusValue, { color: summary.statusColor }]}>
                             {summary.status}
                           </Text>
@@ -552,7 +691,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                         </View>
                       </View>
                       <Text style={styles.statusDescription}>
-                        Média de humor baseada em {summary.totalDays} dias registrados
+                        {t('daysAverage', { count: summary.totalDays })}
                       </Text>
                     </View>
 
@@ -560,7 +699,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                     <View style={styles.summarySection}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="calendar" size={20} color="#6C63FF" />
-                        <Text style={styles.summarySectionTitle}>Resumo Mensal</Text>
+                        <Text style={styles.summarySectionTitle}>{t('monthlySummary')}</Text>
                       </View>
                       <View style={styles.moodGrid}>
                         {MOODS.map(mood => {
@@ -577,7 +716,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                                 </Text>
                               </View>
                               <Text style={styles.moodGridLabel}>{mood.label}</Text>
-                              <Text style={styles.moodGridCount}>{count} dias</Text>
+                              <Text style={styles.moodGridCount}>{count} {count === 1 ? t('day') : t('days')}</Text>
                               <Text style={styles.moodGridPercentage}>{percentage}%</Text>
                             </View>
                           );
@@ -587,7 +726,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
                     {/* Comparação com Mês Anterior */}
                     <View style={styles.summarySection}>
-                      <Text style={styles.summarySectionTitle}>🔄 Comparação</Text>
+                      <Text style={styles.summarySectionTitle}>🔄 {t('comparison')}</Text>
                       {(() => {
                         const currentPositive = analysis.currentMonth.feliz + analysis.currentMonth.calmo + analysis.currentMonth.energetico;
                         const previousPositive = analysis.previousMonth.feliz + analysis.previousMonth.calmo + analysis.previousMonth.energetico;
@@ -601,15 +740,15 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                           <View style={styles.comparisonCard}>
                             <View style={styles.comparisonRow}>
                               <View style={styles.comparisonItem}>
-                                <Text style={styles.comparisonLabel}>Mês Atual</Text>
-                                <Text style={styles.comparisonPositive}>↑ {currentPositive} dias positivos</Text>
-                                <Text style={styles.comparisonNegative}>↓ {currentNegative} dias negativos</Text>
+                                <Text style={styles.comparisonLabel}>{t('currentMonth')}</Text>
+                                <Text style={styles.comparisonPositive}>↑ {currentPositive} {currentPositive === 1 ? t('day') : t('days')} {t('positive')}</Text>
+                                <Text style={styles.comparisonNegative}>↓ {currentNegative} {currentNegative === 1 ? t('day') : t('days')} {t('negative')}</Text>
                               </View>
                               <View style={styles.comparisonDivider} />
                               <View style={styles.comparisonItem}>
-                                <Text style={styles.comparisonLabel}>Mês Anterior</Text>
-                                <Text style={styles.comparisonPositive}>↑ {previousPositive} dias positivos</Text>
-                                <Text style={styles.comparisonNegative}>↓ {previousNegative} dias negativos</Text>
+                                <Text style={styles.comparisonLabel}>{t('previousMonth')}</Text>
+                                <Text style={styles.comparisonPositive}>↑ {previousPositive} {previousPositive === 1 ? t('day') : t('days')} {t('positive')}</Text>
+                                <Text style={styles.comparisonNegative}>↓ {previousNegative} {previousNegative === 1 ? t('day') : t('days')} {t('negative')}</Text>
                               </View>
                             </View>
                             <View style={[
@@ -618,9 +757,9 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                               trend === 'piorando' && styles.trendBadgeNegative,
                             ]}>
                               <Text style={styles.trendText}>
-                                {trend === 'melhorando' ? '📈 Melhorando!' : 
-                                 trend === 'piorando' ? '📉 Atenção necessária' : 
-                                 '🔷 Estável'}
+                                {trend === 'melhorando' ? `📈 ${t('improving')}` : 
+                                 trend === 'piorando' ? `📉 ${t('needsAttention')}` : 
+                                 `🔷 ${t('stable')}`}
                               </Text>
                             </View>
                           </View>
@@ -631,7 +770,7 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
                     {/* Sintomas Frequentes */}
                     {analysis.commonSymptoms.length > 0 && (
                       <View style={styles.summarySection}>
-                        <Text style={styles.summarySectionTitle}>🌡️ Sintomas Frequentes</Text>
+                        <Text style={styles.summarySectionTitle}>🌡️ {t('frequentSymptoms')}</Text>
                         {analysis.commonSymptoms.map((symptom, index) => (
                           <View key={index} style={styles.symptomBadge}>
                             <Text style={styles.symptomBadgeText}>• {symptom}</Text>
@@ -642,18 +781,36 @@ export function MoodTracker({ pets, onMoodUpdated }: MoodTrackerProps) {
 
                     {/* Recomendações */}
                     <View style={styles.summarySection}>
-                      <Text style={styles.summarySectionTitle}>💡 Recomendações</Text>
+                      <Text style={styles.summarySectionTitle}>💡 {t('recommendations')}</Text>
                       <View style={styles.recommendationCard}>
                         <Text style={styles.recommendationText}>
                           {parseFloat(summary.averageScore) >= 8 
-                            ? '✅ Continue com a rotina atual! Seu pet está muito feliz e saudável.'
+                            ? `✅ ${t('recommendation1')}`
                             : parseFloat(summary.averageScore) >= 6.5
-                            ? '👍 Seu pet está bem, mas sempre há espaço para melhorar. Considere mais brincadeiras e carinho.'
+                            ? `👍 ${t('recommendation2')}`
                             : parseFloat(summary.averageScore) >= 5
-                            ? '⚠️ Seu pet pode estar precisando de mais atenção. Aumente o tempo de brincadeiras e verifique a alimentação.'
-                            : '🚨 Recomendamos consultar um veterinário. Seu pet tem apresentado sinais de desconforto frequentes.'}
+                            ? `⚠️ ${t('recommendation3')}`
+                            : `🚨 ${t('recommendation4')}`}
                         </Text>
                       </View>
+                    </View>
+
+                    {/* Botão de Gerar PDF */}
+                    <View style={styles.summarySection}>
+                      <TouchableOpacity 
+                        style={[styles.pdfButton, generatingPDF && styles.pdfButtonDisabled]}
+                        onPress={handleGeneratePDF}
+                        disabled={generatingPDF}
+                      >
+                        <Ionicons 
+                          name="document-text" 
+                          size={20} 
+                          color={generatingPDF ? "#999" : "#fff"} 
+                        />
+                        <Text style={[styles.pdfButtonText, generatingPDF && styles.pdfButtonTextDisabled]}>
+                          {generatingPDF ? t('generatingPDF') : t('generatePDF')}
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </>
                 );
@@ -759,26 +916,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   todayBadge: {
-    backgroundColor: '#E8F5E9',
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
     borderLeftWidth: 3,
-    borderLeftColor: '#4CAF50',
   },
   todayBadgeText: {
     fontSize: 14,
     fontFamily: 'Quicksand_600SemiBold',
-    color: '#2E7D32',
+    color: '#333',
   },
   analysisCard: {
     gap: 16,
   },
   chartContainer: {
     alignItems: 'center',
-    gap: 16,
-    marginTop: 20,
-    marginBottom: 16,
+    gap: 8,
+    marginTop: 16,
+    marginBottom: 8,
+    paddingVertical: 0,
   },
   pieChart: {
     width: 140,
@@ -838,8 +994,10 @@ const styles = StyleSheet.create({
   legend: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
     justifyContent: 'center',
+    paddingHorizontal: 8,
+    marginBottom: 20,
   },
   legendItem: {
     flexDirection: 'row',
@@ -866,18 +1024,28 @@ const styles = StyleSheet.create({
     color: '#5A4E7A',
   },
   modernChart: {
-    width: 280,
-    height: 280,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
   circularChart: {
-    width: 200,
-    height: 200,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+  },
+  pizzaChart: {
+    position: 'absolute',
+    overflow: 'hidden',
+  },
+  pizzaSlice: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+  },
+  pizzaSliceFill: {
+    position: 'absolute',
+    top: 0,
+    transformOrigin: '0% 50%',
   },
   colorRing: {
     width: 200,
@@ -911,7 +1079,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   moodLegends: {
-    marginTop: 20,
+    marginTop: 8,
+    marginBottom: 8,
     width: '100%',
     gap: 8,
   },
@@ -992,9 +1161,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   modernChartCenter: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
     backgroundColor: '#FAFBFF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1006,7 +1172,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   modernScoreText: {
-    fontSize: 48,
     fontFamily: 'Quicksand_700Bold',
     color: '#2D3748',
     letterSpacing: -1,
@@ -1036,8 +1201,8 @@ const styles = StyleSheet.create({
   healthScoreInfo: {
     backgroundColor: '#F0EDFF',
     borderRadius: 12,
-    padding: 12,
-    marginTop: 16,
+    padding: 14,
+    marginTop: 8,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderLeftWidth: 3,
@@ -1062,6 +1227,10 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_500Medium',
     color: '#5A4E7A',
     lineHeight: 18,
+  },
+  infoBold: {
+    fontFamily: 'Quicksand_700Bold',
+    color: '#5A4E7A',
   },
   infoDisclaimer: {
     fontSize: 11,
@@ -1117,7 +1286,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '90%',
+    maxHeight: '95%',
+    minHeight: '75%',
+    marginTop: 60,
+    flex: 1,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1133,11 +1305,11 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   modalContent: {
-    padding: 20,
-    maxHeight: 500,
+    flex: 1,
+    paddingHorizontal: 20,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 30,
   },
   sectionTitle: {
     fontSize: 16,
@@ -1415,5 +1587,52 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_500Medium',
     color: '#2E7D32',
     lineHeight: 20,
+  },
+  pdfButton: {
+    backgroundColor: '#6C63FF',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  pdfButtonDisabled: {
+    backgroundColor: '#E0E0E0',
+  },
+  pdfButtonText: {
+    fontSize: 16,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#fff',
+  },
+  pdfButtonTextDisabled: {
+    color: '#999',
+  },
+
+  notesInput: {
+    borderWidth: 1,
+    borderColor: '#E8E6FF',
+    borderRadius: 12,
+    padding: 15,
+    fontSize: 15,
+    fontFamily: 'Quicksand_400Regular',
+    backgroundColor: '#FAFBFF',
+    minHeight: 120,
+    maxHeight: 150,
+    marginTop: 8,
+    marginBottom: 10,
+  },
+  characterCount: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#999',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  scrollContentContainer: {
+    paddingBottom: 120,
+    paddingTop: 10,
+    flexGrow: 1,
   },
 });

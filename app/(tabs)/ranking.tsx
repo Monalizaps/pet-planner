@@ -5,18 +5,29 @@ import { MoodTrackerIcon } from '../components/PetIcons';
 import { MoodTracker } from '../components/MoodTracker';
 import { Pet } from '../types';
 import { getPets } from '../services/storage';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 export default function Ranking() {
+  const { t } = useTranslation();
   const [pets, setPets] = useState<Pet[]>([]);
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const [petIndex, setPetIndex] = useState<number | undefined>(undefined);
 
   useEffect(() => {
     loadPets();
-  }, []);
+    // Verificar se há parâmetro de petIndex na navegação
+    if (params.petIndex) {
+      const index = parseInt(params.petIndex as string, 10);
+      if (!isNaN(index)) {
+        setPetIndex(index);
+      }
+    }
+  }, [params.petIndex]);
 
   const loadPets = async () => {
     const petsData = await getPets();
@@ -29,10 +40,10 @@ export default function Ranking() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <MoodTrackerIcon size={28} color="#fff" />
-          <Text style={styles.headerTitle}>Controle de Humor</Text>
+          <Text style={styles.headerTitle}>{t('controlMood')}</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          Acompanhe o bem-estar dos seus pets
+          {t('trackWellbeing')}
         </Text>
         <Image
           source={require('../../assets/dogfriends.png')}
@@ -53,21 +64,21 @@ export default function Ranking() {
               style={styles.emptyImage}
               resizeMode="contain"
             />
-            <Text style={styles.emptyTitle}>Nenhum pet cadastrado</Text>
+            <Text style={styles.emptyTitle}>{t('noPetsRegistered')}</Text>
             <Text style={styles.emptyText}>
-              Adicione seu primeiro pet para começar a acompanhar o humor dele
+              {t('addFirstPet')}
             </Text>
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => router.push('/add-pet')}
             >
               <Ionicons name="add-circle" size={24} color="#fff" />
-              <Text style={styles.addButtonText}>Adicionar Pet</Text>
+              <Text style={styles.addButtonText}>{t('addPet')}</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.moodSection}>
-            <MoodTracker pets={pets} onMoodUpdated={loadPets} />
+            <MoodTracker pets={pets} onMoodUpdated={loadPets} initialPetIndex={petIndex} />
           </View>
         )}
       </ScrollView>
