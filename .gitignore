@@ -48,6 +48,39 @@ yarn-error.log*
 .history/
 *.log
 .roaming/
+
+# VS Code settings and temporary files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/extensions.json
+*.code-workspace
+
+# System temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# VS Code roaming data
+.3T/
+default_store.properties
+progress_v1
+*.dat
+*.local
+*.list
+.lock
+studio3t.*
+color_preferences*
+element_preferences*
+resources-info.*
+
+# Cache and temporary directories
+.cache/
+.tmp/
+temp/
+tmp/
 default_store.properties
 progress_v1
 color_preferences_v2.dat
