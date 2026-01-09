@@ -7,12 +7,10 @@ import { Pet } from '../types';
 import { getPets } from '../services/storage';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 
 const { width } = Dimensions.get('window');
 
 export default function Ranking() {
-  const { t } = useTranslation();
   const [pets, setPets] = useState<Pet[]>([]);
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -40,10 +38,10 @@ export default function Ranking() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <MoodTrackerIcon size={28} color="#fff" />
-          <Text style={styles.headerTitle}>{t('controlMood')}</Text>
+          <Text style={styles.headerTitle}>Controle de Humor</Text>
         </View>
         <Text style={styles.headerSubtitle}>
-          {t('trackWellbeing')}
+          Acompanhe o bem-estar do seu pet
         </Text>
         <Image
           source={require('../../assets/dogfriends.png')}
@@ -64,16 +62,16 @@ export default function Ranking() {
               style={styles.emptyImage}
               resizeMode="contain"
             />
-            <Text style={styles.emptyTitle}>{t('noPetsRegistered')}</Text>
-            <Text style={styles.emptyText}>
-              {t('addFirstPet')}
+            <Text style={styles.emptyTitle}>Nenhum pet cadastrado</Text>
+            <Text style={styles.emptySubtitle}>
+              Adicione o primeiro pet para começar a acompanhar seu humor
             </Text>
             <TouchableOpacity
               style={styles.addButton}
               onPress={() => router.push('/add-pet')}
             >
               <Ionicons name="add-circle" size={24} color="#fff" />
-              <Text style={styles.addButtonText}>{t('addPet')}</Text>
+              <Text style={styles.addButtonText}>Adicionar Pet</Text>
             </TouchableOpacity>
           </View>
         ) : (

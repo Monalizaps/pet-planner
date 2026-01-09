@@ -3,7 +3,6 @@ import { Platform, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import { getTasks } from '../services/storage';
-import i18n from '../../i18n/i18n';
 
 // Função para carregar configurações
 async function getNotificationSettings() {
@@ -245,7 +244,7 @@ export async function scheduleTaskNotification(
 
     const notificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: `🐾 Pet Planner - ${i18n.t('reminder')}`,
+        title: `🐾 Pet Planner - Lembrete`,
         body: taskTitle,
         data: { 
           taskId,

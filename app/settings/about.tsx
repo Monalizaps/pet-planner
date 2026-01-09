@@ -10,11 +10,9 @@ import {
 import { Text } from '../components/StyledText';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function AboutSettings() {
-  const { t } = useTranslation();
   const router = useRouter();
 
   const handleLinkPress = (url: string) => {
@@ -28,7 +26,7 @@ export default function AboutSettings() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>ℹ️ {t('about')}</Text>
+        <Text style={styles.headerTitle}>ℹ️ Sobre</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -43,9 +41,9 @@ export default function AboutSettings() {
             <Ionicons name="paw" size={64} color="#6C63FF" />
           </View>
           <Text style={styles.appName}>Pet Planner</Text>
-          <Text style={styles.appTagline}>{t('appTagline')}</Text>
+          <Text style={styles.appTagline}>Cuide bem do seu pet com amor!</Text>
           <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>{t('version')} 1.0.0</Text>
+            <Text style={styles.versionText}>Versão 1.0.0</Text>
           </View>
         </View>
 
@@ -53,23 +51,23 @@ export default function AboutSettings() {
         <View style={styles.section}>
           <View style={styles.card}>
             <Text style={styles.description}>
-              {t('appDescription')}
+              O Pet Planner é um aplicativo completo para cuidar do seu pet com o máximo de carinho e organização. Gerencie tarefas, acompanhe o humor e mantenha um registro completo da saúde e bem-estar do seu companheiro.
             </Text>
           </View>
         </View>
 
         {/* Features */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>✨ {t('features')}</Text>
+          <Text style={styles.sectionTitle}>✨ Funcionalidades</Text>
           
           <View style={styles.featureItem}>
             <View style={[styles.featureIcon, { backgroundColor: '#E8F5E9' }]}>
               <Ionicons name="calendar" size={24} color="#4CAF50" />
             </View>
             <View style={styles.featureInfo}>
-              <Text style={styles.featureTitle}>{t('taskCalendar')}</Text>
+              <Text style={styles.featureTitle}>Calendário de Tarefas</Text>
               <Text style={styles.featureText}>
-                {t('taskCalendarDesc')}
+                Organize e acompanhe todas as atividades do seu pet de forma visual e intuitiva.
               </Text>
             </View>
           </View>
@@ -79,9 +77,9 @@ export default function AboutSettings() {
               <Ionicons name="happy" size={24} color="#FF9800" />
             </View>
             <View style={styles.featureInfo}>
-              <Text style={styles.featureTitle}>{t('moodRegistry')}</Text>
+              <Text style={styles.featureTitle}>Registro de Humor</Text>
               <Text style={styles.featureText}>
-                {t('moodRegistryDesc')}
+                Monitore o bem-estar emocional do seu pet diariamente com gráficos e análises.
               </Text>
             </View>
           </View>
@@ -91,9 +89,9 @@ export default function AboutSettings() {
               <Ionicons name="paw" size={24} color="#5C6BC0" />
             </View>
             <View style={styles.featureInfo}>
-              <Text style={styles.featureTitle}>{t('multiplePets')}</Text>
+              <Text style={styles.featureTitle}>Múltiplos Pets</Text>
               <Text style={styles.featureText}>
-                {t('multiplePetsDesc')}
+                Gerencie quantos pets quiser em um só lugar, cada um com seu perfil personalizado.
               </Text>
             </View>
           </View>
@@ -103,9 +101,9 @@ export default function AboutSettings() {
               <Ionicons name="notifications" size={24} color="#E91E63" />
             </View>
             <View style={styles.featureInfo}>
-              <Text style={styles.featureTitle}>{t('notifications')}</Text>
+              <Text style={styles.featureTitle}>Notificações</Text>
               <Text style={styles.featureText}>
-                {t('notificationsDesc')}
+                Receba lembretes importantes para nunca esquecer do cuidado do seu pet.
               </Text>
             </View>
           </View>
@@ -113,10 +111,10 @@ export default function AboutSettings() {
 
         {/* Developer */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>👩‍💻 {t('developedBy')}</Text>
+          <Text style={styles.sectionTitle}>👩‍💻 Desenvolvido por</Text>
           <View style={styles.card}>
             <Text style={styles.developerText}>
-              {t('developerMessage')}
+              Este aplicativo foi criado com muito carinho por uma equipe dedicada que entende a importância dos pets em nossas vidas.
             </Text>
           </View>
         </View>
@@ -126,9 +124,9 @@ export default function AboutSettings() {
         {/* Legal */}
         <View style={styles.section}>
           <Text style={styles.legalText}>
-            {t('copyright')}
+            © 2026 Pet Planner. Todos os direitos reservados.
             {'\n'}
-            {t('madeWithLove')}
+            Feito com ❤️ para todos os pais de pets!
           </Text>
         </View>
 
@@ -136,7 +134,7 @@ export default function AboutSettings() {
         <View style={styles.creditsBox}>
           <Ionicons name="heart" size={20} color="#FF6B9D" />
           <Text style={styles.creditsText}>
-            {t('thanksMessage')}
+            Obrigado por confiar no Pet Planner para cuidar do seu companheiro!
           </Text>
         </View>
       </ScrollView>

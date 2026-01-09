@@ -19,11 +19,9 @@ import { TaskIcon } from './components/PetIcons';
 import { v4 as uuidv4 } from 'uuid';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function AddTask() {
-  const { t } = useTranslation();
   const router = useRouter();
   const { petId: urlPetId } = useLocalSearchParams<{ petId: string }>();
 
@@ -136,10 +134,10 @@ export default function AddTask() {
   };
 
   const recurringOptions = [
-    { value: undefined, label: t('onceOnly'), icon: '📅' },
-    { value: 'daily', label: t('daily'), icon: '🔄' },
-    { value: 'weekly', label: t('weekly'), icon: '📆' },
-    { value: 'monthly', label: t('monthly'), icon: '🗓️' },
+    { value: undefined, label: 'Apenas uma vez', icon: '📅' },
+    { value: 'daily', label: 'Diário', icon: '🔄' },
+    { value: 'weekly', label: 'Semanal', icon: '📆' },
+    { value: 'monthly', label: 'Mensal', icon: '🗓️' },
   ] as const;
 
   return (
@@ -151,25 +149,25 @@ export default function AddTask() {
         </TouchableOpacity>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TaskIcon size={24} color="#fff" />
-          <Text style={styles.title}>{t('newTask')}</Text>
+          <Text style={styles.title}>Nova Tarefa</Text>
         </View>
         <View style={{ width: 24 }} />
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.label}>{t('taskType')}</Text>
+        <Text style={styles.label}>Tipo da Tarefa</Text>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           style={{ marginBottom: 20 }}
         >
           {[
-            { type: 'medication' as const, icon: '💊', label: t('medication') },
-            { type: 'feeding' as const, icon: '🍽️', label: t('feeding') },
-            { type: 'consultation' as const, icon: '🏥', label: t('consultation') },
-            { type: 'grooming' as const, icon: '✂️', label: t('grooming') },
-            { type: 'exercise' as const, icon: '🏃', label: t('exercise') },
-            { type: 'other' as const, icon: '📝', label: t('other') },
+            { type: 'medication' as const, icon: '💊', label: 'Medicamento' },
+            { type: 'feeding' as const, icon: '🍽️', label: 'Alimentação' },
+            { type: 'consultation' as const, icon: '🏥', label: 'Consulta' },
+            { type: 'grooming' as const, icon: '✂️', label: 'Higiene' },
+            { type: 'exercise' as const, icon: '🏃', label: 'Exercício' },
+            { type: 'other' as const, icon: '📝', label: 'Outros' },
           ].map((item) => (
             <TouchableOpacity
               key={item.type}
@@ -212,27 +210,27 @@ export default function AddTask() {
           ))}
         </ScrollView>
 
-        <Text style={styles.label}>{t('title')}</Text>
+        <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
-          placeholder={t('titlePlaceholder')}
+          placeholder="Digite o título da tarefa"
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>{t('descriptionOptional')}</Text>
+        <Text style={styles.label}>Descrição (Opcional)</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={description}
           onChangeText={setDescription}
-          placeholder={t('descriptionPlaceholder')}
+          placeholder="Detalhes adicionais sobre a tarefa"
           placeholderTextColor="#999"
           multiline
           numberOfLines={3}
         />
 
-        <Text style={styles.label}>{t('date')}</Text>
+        <Text style={styles.label}>Data</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -256,7 +254,7 @@ export default function AddTask() {
           />
         )}
 
-        <Text style={styles.label}>{t('time')}</Text>
+        <Text style={styles.label}>Horário</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowTimePicker(true)}
@@ -268,7 +266,7 @@ export default function AddTask() {
                   hour: '2-digit',
                   minute: '2-digit',
                 })
-              : t('selectTime')}
+              : 'Selecionar horário'}
           </Text>
         </TouchableOpacity>
 
@@ -282,7 +280,7 @@ export default function AddTask() {
           />
         )}
 
-        <Text style={styles.label}>{t('recurrence')}</Text>
+        <Text style={styles.label}>Recorrência</Text>
         <View style={styles.recurringContainer}>
           {recurringOptions.map((option) => (
             <TouchableOpacity
@@ -307,7 +305,7 @@ export default function AddTask() {
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>{t('saveTask')}</Text>
+          <Text style={styles.saveButtonText}>Salvar Tarefa</Text>
         </TouchableOpacity>
         <View style={{ height: 40 }} />
       </View>

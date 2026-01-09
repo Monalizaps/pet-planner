@@ -11,14 +11,14 @@ interface PDFReportData {
 }
 
 // Função para traduzir humor
-const translateMood = (mood: MoodType, t: (key: string) => string): string => {
+const translateMood = (mood: MoodType): string => {
   const moodTranslations: Record<MoodType, string> = {
-    feliz: t('happy'),
-    calmo: t('calm'),
-    ansioso: t('anxious'),
-    triste: t('sad'),
-    irritado: t('irritated'),
-    energetico: t('energetic'),
+    feliz: 'Feliz',
+    calmo: 'Calmo',
+    ansioso: 'Ansioso',
+    triste: 'Triste',
+    irritado: 'Irritado',
+    energetico: 'Energético',
   };
   return moodTranslations[mood] || mood;
 };
@@ -93,7 +93,7 @@ const calculatePeriodStats = (entries: MoodEntry[], days: number) => {
 };
 
 // Função para gerar gráfico de humor em SVG
-const generateMoodChart = (moodCount: Record<string, number>, t: (key: string) => string): string => {
+const generateMoodChart = (moodCount: Record<string, number>): string => {
   const totalEntries = Object.values(moodCount).reduce((sum, count) => sum + count, 0);
   if (totalEntries === 0) return '';
 
@@ -160,7 +160,7 @@ const generateHTMLTemplate = (data: PDFReportData, t: (key: string) => string): 
   });
   
   // Gerar gráfico
-  const chartSVG = generateMoodChart(moodDistribution, t);
+  const chartSVG = generateMoodChart(moodDistribution);
   
   // Entradas recentes (últimas 10)
   const recentEntriesHTML = recentEntries.slice(0, 10).map(entry => `
@@ -183,7 +183,7 @@ const generateHTMLTemplate = (data: PDFReportData, t: (key: string) => string): 
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>${t('moodReport')} - ${pet.name}</title>
+      <title>Relatório de Humor - ${pet.name}</title>
       <style>
         body {
           font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -307,64 +307,64 @@ const generateHTMLTemplate = (data: PDFReportData, t: (key: string) => string): 
     <body>
       <div class="header">
         <div class="pet-name">${pet.name}</div>
-        <div class="report-title">${t('moodReport')} - ${formatDate(new Date().toISOString())}</div>
+        <div class="report-title">Relatório de Humor - ${formatDate(new Date().toISOString())}</div>
       </div>
 
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value">${stats30Days.averageScore.toFixed(1)}</div>
-          <div class="stat-label">${t('averageScore')} (30 ${t('days')})</div>
+          <div class="stat-label">Pontuação Média (30 dias)</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">${recentEntries.length}</div>
-          <div class="stat-label">${t('totalEntries')} (90 ${t('days')})</div>
+          <div class="stat-label">Total de Registros (90 dias)</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">${recentEntries.filter(e => ['feliz', 'calmo', 'energetico'].includes(e.mood)).length}</div>
-          <div class="stat-label">${t('positiveDays')}</div>
+          <div class="stat-label">Dias Positivos</div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">${t('moodDistribution')}</div>
+        <div class="section-title">Distribuição de Humor</div>
         <div class="chart-container">
           ${chartSVG}
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">${t('periodComparison')}</div>
+        <div class="section-title">Comparação de Períodos</div>
         <div class="comparison">
           <div class="comparison-card">
-            <div class="comparison-title">${t('last7Days')}</div>
-            <p><strong>${t('averageScore')}:</strong> 
+            <div class="comparison-title">Últimos 7 Dias</div>
+            <p><strong>Pontuação Média:</strong> 
               <span class="score-badge ${stats7Days.averageScore >= 7 ? 'score-good' : stats7Days.averageScore >= 5 ? 'score-medium' : 'score-low'}">
                 ${stats7Days.averageScore.toFixed(1)}
               </span>
             </p>
-            <p><strong>${t('totalEntries')}:</strong> ${stats7Days.totalEntries}</p>
+            <p><strong>Total de Registros:</strong> ${stats7Days.totalEntries}</p>
           </div>
           <div class="comparison-card">
-            <div class="comparison-title">${t('last30Days')}</div>
-            <p><strong>${t('averageScore')}:</strong> 
+            <div class="comparison-title">Últimos 30 Dias</div>
+            <p><strong>Pontuação Média:</strong> 
               <span class="score-badge ${stats30Days.averageScore >= 7 ? 'score-good' : stats30Days.averageScore >= 5 ? 'score-medium' : 'score-low'}">
                 ${stats30Days.averageScore.toFixed(1)}
               </span>
             </p>
-            <p><strong>${t('totalEntries')}:</strong> ${stats30Days.totalEntries}</p>
+            <p><strong>Total de Registros:</strong> ${stats30Days.totalEntries}</p>
           </div>
         </div>
       </div>
 
       <div class="section">
-        <div class="section-title">${t('recentEntries')}</div>
+        <div class="section-title">Registros Recentes</div>
         <table class="table">
           <thead>
             <tr>
-              <th>${t('date')}</th>
-              <th>${t('mood')}</th>
-              <th>${t('symptoms')}</th>
-              <th>${t('notes')}</th>
+              <th>Data</th>
+              <th>Humor</th>
+              <th>Sintomas</th>
+              <th>Observações</th>
             </tr>
           </thead>
           <tbody>
@@ -374,14 +374,14 @@ const generateHTMLTemplate = (data: PDFReportData, t: (key: string) => string): 
       </div>
 
       <div class="section">
-        <div class="section-title">${t('analysis')}</div>
+        <div class="section-title">Análise</div>
         <div style="background: ${analysis.alertLevel === 'normal' ? '#e8f5e8' : analysis.alertLevel === 'atencao' ? '#fff3cd' : '#f8d7da'}; 
                     padding: 15px; border-radius: 8px; border-left: 4px solid ${analysis.alertLevel === 'normal' ? '#28a745' : analysis.alertLevel === 'atencao' ? '#ffc107' : '#dc3545'};">
-          <strong>${t(analysis.alertLevel)}:</strong> ${analysis.message}
+          <strong>${analysis.alertLevel === 'normal' ? 'Normal' : analysis.alertLevel === 'atencao' ? 'Atenção' : 'Cuidado necessário'}:</strong> ${analysis.message}
         </div>
         ${analysis.commonSymptoms && analysis.commonSymptoms.length > 0 ? `
           <div style="margin-top: 15px;">
-            <strong>${t('commonSymptoms')}:</strong>
+            <strong>Sintomas Comuns:</strong>
             <ul>
               ${analysis.commonSymptoms.map(symptom => `<li>${symptom}</li>`).join('')}
             </ul>
@@ -390,7 +390,7 @@ const generateHTMLTemplate = (data: PDFReportData, t: (key: string) => string): 
       </div>
 
       <div class="footer">
-        ${t('reportGeneratedBy')} Pet Planner App - ${new Date().toLocaleString('pt-BR')}
+        Relatório gerado por Pet Planner App - ${new Date().toLocaleString('pt-BR')}
       </div>
     </body>
     </html>
@@ -437,11 +437,11 @@ export const generateMoodPDF = async (
     if (await Sharing.isAvailableAsync()) {
       await Sharing.shareAsync(uri, {
         mimeType: 'application/pdf',
-        dialogTitle: `${t('moodReport')} - ${pet.name}`,
+        dialogTitle: `Relatório de Humor - ${pet.name}`,
         UTI: 'com.adobe.pdf',
       });
     } else {
-      throw new Error(t('sharingNotAvailable'));
+      throw new Error('Compartilhamento não disponível');
     }
   } catch (error) {
     console.error('Erro ao gerar PDF:', error);

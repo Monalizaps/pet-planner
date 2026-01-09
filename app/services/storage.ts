@@ -8,7 +8,6 @@ import {
   sanitizeString,
   checkRateLimit,
 } from './security';
-import i18n from '../../i18n/i18n';
 
 const PETS_KEY = '@pet_planner_pets';
 const TASKS_KEY = '@pet_planner_tasks';
@@ -408,17 +407,17 @@ export async function analyzeMood(petId: string): Promise<MoodAnalysis> {
     
     if (negativeRatio > 0.6) {
       alertLevel = 'alerta';
-      message = `⚠️ ${i18n.t('alertNegativeMood')}`;
+      message = `⚠️ Humor negativo detectado`;
     } else if (negativeRatio > 0.4) {
       alertLevel = 'atencao';
-      message = `⚡ ${i18n.t('attentionDifficultDays')}`;
+      message = `⚡ Atenção para dias difíceis`;
     } else if (positiveCount > negativeCount * 2) {
-      message = `🌟 ${i18n.t('veryHappyPet')}`;
+      message = `🌟 Pet muito feliz!`;
     }
   } else if (totalCount > 0) {
-    message = `📊 ${i18n.t('continueDaily')} ${i18n.t('dailyMoodTip')}.`;
+    message = `📊 Continue o acompanhamento diário. Registros constantes ajudam no cuidado.`;
   } else {
-    message = `🐾 ${i18n.t('startTrackingMood')}`;
+    message = `🐾 Inicie o acompanhamento do humor`;
   }
   
   return {

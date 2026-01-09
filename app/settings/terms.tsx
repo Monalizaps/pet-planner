@@ -8,11 +8,9 @@ import {
 import { Text } from '../components/StyledText';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function TermsSettings() {
-  const { t } = useTranslation();
   const router = useRouter();
 
   return (
@@ -22,7 +20,7 @@ export default function TermsSettings() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>📄 {t('terms')}</Text>
+        <Text style={styles.headerTitle}>📄 Termos</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -33,76 +31,88 @@ export default function TermsSettings() {
       >
         {/* Terms of Service */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('termsOfService')}</Text>
+          <Text style={styles.sectionTitle}>Termos de Serviço</Text>
           <View style={styles.card}>
             <Text style={styles.paragraph}>
-              <Text style={styles.bold}>{t('lastUpdated')}</Text> 22 de novembro de 2025
+              <Text style={styles.bold}>Última atualização:</Text> 22 de novembro de 2025
             </Text>
             
-            <Text style={styles.subtitle}>1. {t('acceptanceOfTerms')}</Text>
+            <Text style={styles.subtitle}>1. Aceitação dos Termos</Text>
             <Text style={styles.paragraph}>
-              {t('termsContent1')}
+              Ao acessar e usar este aplicativo, você aceita estar vinculado a estes
+              termos de serviço e todas as leis e regulamentações aplicáveis.
             </Text>
 
-            <Text style={styles.subtitle}>2. {t('useOfService')}</Text>
+            <Text style={styles.subtitle}>2. Uso do Serviço</Text>
             <Text style={styles.paragraph}>
-              {t('termsContent2')}
+              Você pode usar nosso aplicativo para gerenciar cuidados com pets.
+              O uso deve ser legal e não prejudicar outros usuários.
             </Text>
 
-            <Text style={styles.subtitle}>3. {t('userContent')}</Text>
+            <Text style={styles.subtitle}>3. Conteúdo do Usuário</Text>
             <Text style={styles.paragraph}>
-              {t('termsContent3')}
+              Você é responsável pelo conteúdo que adiciona ao aplicativo.
+              Não compartilhamos suas informações pessoais sem permissão.
             </Text>
 
-            <Text style={styles.subtitle}>4. {t('limitations')}</Text>
+            <Text style={styles.subtitle}>4. Limitações</Text>
             <Text style={styles.paragraph}>
-              {t('termsContent4')}
+              O aplicativo é fornecido "como está". Não garantimos
+              funcionamento ininterrupto ou livre de erros.
             </Text>
 
-            <Text style={styles.subtitle}>5. {t('modifications')}</Text>
+            <Text style={styles.subtitle}>5. Modificações</Text>
             <Text style={styles.paragraph}>
-              {t('termsContent5')}
+              Podemos modificar estes termos a qualquer momento.
+              As mudanças entrarão em vigor imediatamente após a publicação.
             </Text>
           </View>
         </View>
 
         {/* Privacy Policy */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('privacyPolicy')}</Text>
+          <Text style={styles.sectionTitle}>Política de Privacidade</Text>
           <View style={styles.card}>
-            <Text style={styles.subtitle}>1. {t('informationCollected')}</Text>
+            <Text style={styles.subtitle}>1. Informações Coletadas</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent1')}
+              Coletamos apenas informações necessárias para o funcionamento do app:
+              dados dos pets, tarefas e configurações de notificação.
             </Text>
 
-            <Text style={styles.subtitle}>2. {t('useOfInformation')}</Text>
+            <Text style={styles.subtitle}>2. Uso das Informações</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent2')}
+              Usamos suas informações apenas para fornecer e melhorar
+              nossos serviços. Nunca vendemos seus dados.
             </Text>
 
-            <Text style={styles.subtitle}>3. {t('dataStorage')}</Text>
+            <Text style={styles.subtitle}>3. Armazenamento de Dados</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent3')}
+              Seus dados são armazenados localmente no seu dispositivo.
+              Fazemos backups seguros quando necessário.
             </Text>
 
-            <Text style={styles.subtitle}>4. {t('sharing')}</Text>
+            <Text style={styles.subtitle}>4. Compartilhamento</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent4')}
+              Não compartilhamos suas informações pessoais com terceiros,
+              exceto quando exigido por lei.
             </Text>
 
-            <Text style={styles.subtitle}>5. {t('yourRights')}</Text>
+            <Text style={styles.subtitle}>5. Seus Direitos</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent5')}
+              Você pode acessar, corrigir ou excluir suas informações
+              a qualquer momento através das configurações do app.
             </Text>
 
-            <Text style={styles.subtitle}>6. {t('cookiesAndSimilarTech')}</Text>
+            <Text style={styles.subtitle}>6. Cookies e Tecnologias Similares</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent6')}
+              Utilizamos tecnologias de armazenamento local para melhorar
+              sua experiência e lembrar suas preferências.
             </Text>
 
-            <Text style={styles.subtitle}>7. {t('security')}</Text>
+            <Text style={styles.subtitle}>7. Segurança</Text>
             <Text style={styles.paragraph}>
-              {t('privacyContent7')}
+              Implementamos medidas de segurança para proteger suas informações
+              contra acesso não autorizado e uso indevido.
             </Text>
 
             <Text style={styles.subtitle}>8. Menores de Idade</Text>

@@ -3,34 +3,17 @@ import { Slot, usePathname, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '../components/StyledText';
 import { colors } from '../theme/colors';
-import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
-import i18n from 'i18next';
 
 export default function TabsLayout() {
-  const { t } = useTranslation();
   const pathname = usePathname();
   const router = useRouter();
-  const [currentLanguage, setCurrentLanguage] = useState(i18n.language);
-
-  // Listener para mudanças de idioma - força re-render das abas
-  useEffect(() => {
-    const handleLanguageChange = (language: string) => {
-      setCurrentLanguage(language);
-    };
-    
-    i18n.on('languageChanged', handleLanguageChange);
-    
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
-  }, []);
 
   const tabs = [
-    { name: 'index', label: t('home'), icon: 'home' as const, route: '/(tabs)/' },
-    { name: 'jornada', label: t('routine'), icon: 'calendar' as const, route: '/(tabs)/jornada' },
-    { name: 'ranking', label: t('mood'), icon: 'happy' as const, route: '/(tabs)/ranking' },
-    { name: 'mais', label: t('more'), icon: 'menu' as const, route: '/(tabs)/mais' },
+    { name: 'index', label: 'Início', icon: 'home' as const, route: '/(tabs)/' },
+    { name: 'jornada', label: 'Rotina', icon: 'calendar' as const, route: '/(tabs)/jornada' },
+    { name: 'ranking', label: 'Humor', icon: 'happy' as const, route: '/(tabs)/ranking' },
+    { name: 'mais', label: 'Mais', icon: 'menu' as const, route: '/(tabs)/mais' },
   ];
 
   const isActive = (route: string) => {

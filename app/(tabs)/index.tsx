@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { secureRetrieve } from '../services/security';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, gradients } from '../theme/colors';
+import { TOUCH_TARGET, SPACING } from '../constants/accessibility';
+import accessibleStyles from '../styles/accessible';
 
 export default function Home() {
   const router = useRouter();
@@ -150,8 +152,8 @@ export default function Home() {
     const dominant = Object.entries(moodCounts)
       .sort((a, b) => b[1] - a[1])[0];
 
-    // Calcular score
-    const moodScores: { [key in MoodType]: number } = {
+    // Usar exatamente a mesma lógica do MoodTracker
+    const moodScores = {
       feliz: 10,
       energetico: 9,
       calmo: 8,
@@ -161,17 +163,50 @@ export default function Home() {
     };
     
     let totalScore = 0;
+    let totalDays = 0;
     Object.entries(moodCounts).forEach(([mood, count]) => {
-      totalScore += count * moodScores[mood as MoodType];
+      const score = moodScores[mood as MoodType] || 5;
+      totalScore += score * count;
+      totalDays += count;
     });
     
-    const averageScore = last7Days.length > 0 ? (totalScore / last7Days.length).toFixed(1) : '0.0';
+    let averageScore = totalDays > 0 ? totalScore / totalDays : 0;
+    
+    // Calcular symptomScore baseado nos sintomas (mesma lógica do analyzeMood)
+    let symptomScore = 0;
+    let positiveSymptomCount = 0;
+    let negativeSymptomCount = 0;
+    
+    last7Days.forEach(entry => {
+      entry.symptoms.forEach(symptomId => {
+        const symptom = AVAILABLE_SYMPTOMS.find(s => s.id === symptomId);
+        if (symptom) {
+          if (symptom.isPositive) {
+            positiveSymptomCount++;
+          } else if (symptom.isPositive === false) {
+            negativeSymptomCount++;
+          }
+        }
+      });
+    });
+    
+    // Cada sintoma positivo adiciona +0.5, negativo -0.5 (máximo ±2)
+    if (last7Days.length > 0) {
+      const avgPositive = positiveSymptomCount / last7Days.length;
+      const avgNegative = negativeSymptomCount / last7Days.length;
+      symptomScore = (avgPositive * 0.5) - (avgNegative * 0.5);
+      symptomScore = Math.max(-2, Math.min(2, symptomScore));
+      
+      // Aplicar ajuste de sintomas
+      averageScore += symptomScore;
+      averageScore = Math.max(0, Math.min(10, averageScore));
+    }
 
     return {
       total: last7Days.length,
       dominant: dominant[0] as MoodType,
       count: dominant[1],
-      score: averageScore,
+      score: averageScore.toFixed(1),
       distribution: moodCounts,
     };
   };
@@ -186,8 +221,11 @@ export default function Home() {
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <TouchableOpacity
-            style={styles.profileButton}
+            style={[styles.profileButton, { minWidth: TOUCH_TARGET.MIN_SIZE, minHeight: TOUCH_TARGET.MIN_SIZE }]}
             onPress={() => router.push('/profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Ver perfil"
+            accessibilityHint="Navega para a tela de perfil do usuário"
           >
             {tutor?.imageUri ? (
               <Image source={{ uri: tutor.imageUri }} style={styles.profileImage} />
@@ -219,9 +257,12 @@ export default function Home() {
         {/* Cards de Resumo Rápido */}
         <View style={styles.quickStats}>
           <TouchableOpacity 
-            style={styles.statCardWrapper}
+            style={[styles.statCardWrapper, { minHeight: TOUCH_TARGET.MIN_SIZE }]}
             onPress={() => router.push('/pets-list')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`${pets.length} pets cadastrados`}
+            accessibilityHint="Navega para a lista de pets"
           >
             <LinearGradient
               colors={['#E0D4F7', '#D4C5F9', '#C5E3F6']}
@@ -235,9 +276,12 @@ export default function Home() {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.statCardWrapper}
+            style={[styles.statCardWrapper, { minHeight: TOUCH_TARGET.MIN_SIZE }]}
             onPress={() => router.push('/(tabs)/jornada')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={`${getTodayTasks().length} tarefas para hoje`}
+            accessibilityHint="Navega para a jornada de hoje"
           >
             <LinearGradient
               colors={['#FFE0F0', '#FFD0E0']}
@@ -253,9 +297,12 @@ export default function Home() {
             </LinearGradient>
           </TouchableOpacity>
           <TouchableOpacity 
-            style={styles.statCardWrapper}
+            style={[styles.statCardWrapper, { minHeight: TOUCH_TARGET.MIN_SIZE }]}
             onPress={() => router.push('/(tabs)/jornada')}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="Acessar jornada completa"
+            accessibilityHint="Navega para a tela de jornada"
           >
             <LinearGradient
               colors={['#FFF4C4', '#FFD4B2']}
@@ -364,7 +411,24 @@ export default function Home() {
                                     cumulativePercentage += percentage;
                                     
                                     const isLargeArc = sweepDegree > 180;
+                                    const isFullCircle = sweepDegree >= 360;
                                     const color = moodColors[mood as MoodType];
+                                    
+                                    // Para um círculo completo (100%), usar um círculo simples
+                                    if (isFullCircle) {
+                                      return (
+                                        <View
+                                          key={mood}
+                                          style={[
+                                            styles.miniPizzaSlice,
+                                            {
+                                              backgroundColor: color,
+                                              borderRadius: 30, // metade do tamanho 60x60
+                                            }
+                                          ]}
+                                        />
+                                      );
+                                    }
                                     
                                     return (
                                       <View
@@ -758,7 +822,7 @@ export default function Home() {
           statusColor = '#FF9800';
           statusEmoji = '⚠️';
         } else {
-          statusText = 'Crítico';
+          statusText = 'Cuidado necessário';
           statusColor = '#F44336';
           statusEmoji = '🚨';
         }

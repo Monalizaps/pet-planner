@@ -30,8 +30,6 @@ import {
 import { colors } from './theme/colors';
 import { useTheme } from './theme/ThemeProvider';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import '../i18n/i18n';
-import { useTranslation } from 'react-i18next';
 
 interface SocialPost {
   id: string;
@@ -68,7 +66,6 @@ LocaleConfig.locales['pt-br'] = {
 LocaleConfig.defaultLocale = 'pt-br';
 
 export default function Home() {
-  const { t } = useTranslation();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const [pets, setPets] = useState<Pet[]>([]);

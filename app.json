@@ -3,7 +3,7 @@
     "name": "MiAuto",
     "slug": "miauto-lembrete",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/logo-app.png",
@@ -15,7 +15,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.miautolembrete.app",
-      "backgroundColor": "#FAF7FF"
+      "backgroundColor": "#FAF7FF",
+      "infoPlist": {
+        "UISupportedInterfaceOrientations": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      }
     },
     "android": {
       "package": "com.miautolembrete.app",
@@ -27,7 +40,9 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo-app.png",
         "backgroundColor": "#FAF7FF"
-      }
+      },
+      "screenOrientation": "default",
+      "softwareKeyboardLayoutMode": "pan"
     },
     "web": {
       "bundler": "metro",

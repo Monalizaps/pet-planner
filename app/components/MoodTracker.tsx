@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
+  Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
@@ -13,7 +14,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
-import { Text } from './StyledText';
+import { TOUCH_TARGET, SPACING } from '../constants/accessibility';
+import { dynamicTypography } from '../utils/dynamicText';
+import { getChartSize, getResponsiveSpacing, isTablet } from '../utils/responsiveness';
 import { MoodIcon, PetIcon, PawIcon } from './PetIcons';
 import { Ionicons } from '@expo/vector-icons';
 import { Pet, MoodEntry, MoodType, MoodAnalysis } from '../types';
@@ -25,7 +28,6 @@ import {
 } from '../services/storage';
 import { generateMoodPDF } from '../services/pdfGenerator';
 import { v4 as uuid } from 'uuid';
-import { useTranslation } from 'react-i18next';
 
 interface MoodTrackerProps {
   pets: Pet[];
@@ -33,19 +35,17 @@ interface MoodTrackerProps {
   initialPetIndex?: number;
 }
 
-const getMoods = (t: any): { type: MoodType; label: string; color: string }[] => [
-  { type: 'feliz', label: t('happy'), color: '#FFD93D' },
-  { type: 'calmo', label: t('calm'), color: '#A8D5BA' },
-  { type: 'ansioso', label: t('anxious'), color: '#FFA500' },
-  { type: 'triste', label: t('sad'), color: '#B8B8FF' },
-  { type: 'irritado', label: t('irritated'), color: '#FF6B6B' },
-  { type: 'energetico', label: t('energetic'), color: '#95E1D3' },
+const MOODS: { type: MoodType; label: string; color: string }[] = [
+  { type: 'feliz', label: 'Feliz', color: '#FFD93D' },
+  { type: 'calmo', label: 'Calmo', color: '#A8D5BA' },
+  { type: 'ansioso', label: 'Ansioso', color: '#FFA500' },
+  { type: 'triste', label: 'Triste', color: '#B8B8FF' },
+  { type: 'irritado', label: 'Irritado', color: '#FF6B6B' },
+  { type: 'energetico', label: 'Enérgico', color: '#95E1D3' },
 ];
 
 export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTrackerProps) {
-  const { t } = useTranslation();
   const { width } = useWindowDimensions();
-  const MOODS = getMoods(t);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [summaryModalVisible, setSummaryModalVisible] = useState(false);
@@ -57,13 +57,13 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
   const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Estilos dinâmicos baseados na largura da tela
-  const screenPadding = 40; // Padding do container (20px cada lado)
-  const availableWidth = width - screenPadding;
+  const screenPadding = getResponsiveSpacing(20);
+  const availableWidth = width - (screenPadding * 2);
   
-  // Gráfico responsivo: 60% da largura disponível, com min/max
-  const chartSize = Math.max(180, Math.min(availableWidth * 0.6, 220));
+  // Gráfico responsivo usando utilidades
+  const chartSize = getChartSize();
   const chartCenterSize = chartSize * 0.68;
-  const scoreFontSize = chartCenterSize * 0.35;
+  const scoreFontSize = chartCenterSize * (isTablet() ? 0.3 : 0.35);
 
   const dynamicStyles = {
     moodButton: {
@@ -128,10 +128,10 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
       setNotes('');
       await loadMoodData(selectedPet);
       onMoodUpdated?.();
-      Alert.alert(t('success'), t('moodRegistered'));
+      Alert.alert('Sucesso', 'Humor registrado com sucesso!');
     } catch (error) {
       console.error('❌ Erro ao salvar entrada:', error);
-      Alert.alert(t('error'), t('couldNotSaveMood'));
+      Alert.alert('Erro', 'Não foi possível salvar o humor');
     }
   };
 
@@ -143,7 +143,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
       await generateMoodPDF(selectedPet, analysis, t);
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);
-      Alert.alert(t('error'), t('couldNotGeneratePDF'));
+      Alert.alert('Erro', 'Não foi possível gerar o PDF');
     } finally {
       setGeneratingPDF(false);
     }
@@ -213,7 +213,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
       statusColor = '#FF9800';
       statusEmoji = '⚠️';
     } else {
-      status = 'Crítico';
+      status = 'Cuidado necessário';
       statusColor = '#F44336';
       statusEmoji = '🚨';
     }
@@ -310,6 +310,25 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                   
                   // Criar segmentos de pizza usando clip
                   const isLargeArc = sweepDegree > 180;
+                  const isFullCircle = sweepDegree >= 360;
+                  
+                  // Para um círculo completo (100%), usar um círculo simples
+                  if (isFullCircle) {
+                    return (
+                      <View
+                        key={mood.type}
+                        style={[
+                          styles.pizzaSlice,
+                          {
+                            width: dynamicStyles.chartSize,
+                            height: dynamicStyles.chartSize,
+                            backgroundColor: mood.color,
+                            borderRadius: dynamicStyles.chartSize / 2,
+                          }
+                        ]}
+                      />
+                    );
+                  }
                   
                   return (
                     <View
@@ -364,7 +383,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
               borderRadius: dynamicStyles.chartCenterSize / 2,
             }]}>
               <Text style={[styles.modernScoreText, { fontSize: dynamicStyles.scoreFontSize }]}>{averageScoreFormatted}</Text>
-              <Text style={styles.modernScoreLabel}>{t('healthScore')}</Text>
+              <Text style={styles.modernScoreLabel}>Pontuação de Saúde</Text>
             </View>
           </View>
         </View>
@@ -385,21 +404,18 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
           ))}
         </View>
 
-        {/* Informação sobre o score */}
-        <View style={styles.healthScoreInfo}>
-          <View style={styles.infoIcon}>
-            <Ionicons name="information-circle" size={20} color="#B8A4E8" />
+        {/* Explicação do Score */}
+        <View style={styles.scoreExplanation}>
+          <View style={styles.scoreExplanationHeader}>
+            <Ionicons name="information-circle-outline" size={16} color="#6C63FF" />
+            <Text style={styles.scoreExplanationTitle}>Como é calculado</Text>
           </View>
-          <View style={styles.infoTextContainer}>
-            <Text style={styles.infoTitle}>{t('howItWorks')}</Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.infoBold}>{t('chart')}:</Text> {t('chartDescription')}{'\n\n'}
-              <Text style={styles.infoBold}>{t('score')}:</Text> {t('scoreDescription')}
-            </Text>
-            <Text style={styles.infoDisclaimer}>
-              ⚠️ {t('analysisWarning')}
-            </Text>
-          </View>
+          <Text style={styles.scoreExplanationText}>
+            Média ponderada dos últimos 30 dias: 😢=1, 😐=5, 😊=9. Registros recentes têm mais peso no cálculo.
+          </Text>
+          <Text style={styles.scoreDisclaimer}>
+            ⚠️ Esta análise não substitui consulta veterinária
+          </Text>
         </View>
       </TouchableOpacity>
     );
@@ -412,7 +428,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
       {/* Seletor de Pets */}
       {pets.length > 1 && (
         <View style={styles.petSelector}>
-          <Text style={styles.petSelectorLabel}>{t('selectPet')}</Text>
+          <Text style={styles.petSelectorLabel}>Selecione o pet:</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.petSelectorScroll}>
             {pets.map(pet => (
               <TouchableOpacity
@@ -445,9 +461,9 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
           </View>
           <View>
             <Text style={styles.title}>
-              {selectedPet ? `${t('moodOf')} ${selectedPet.name}` : 'Como está seu pet hoje?'}
+              {selectedPet ? `Humor de ${selectedPet.name}` : 'Como está seu pet hoje?'}
             </Text>
-            <Text style={styles.subtitle}>{t('registerDailyMood')}</Text>
+            <Text style={styles.subtitle}>Registre o humor diário do seu pet</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -490,7 +506,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
           {analysis.commonSymptoms.length > 0 && (
             <View style={styles.symptomsSection}>
-              <Text style={styles.symptomsTitle}>{t('mostFrequentSymptoms')}:</Text>
+              <Text style={styles.symptomsTitle}>Sintomas mais frequentes:</Text>
               {analysis.commonSymptoms.map((symptom, index) => (
                 <Text key={index} style={styles.symptomItem}>• {symptom}</Text>
               ))}
@@ -511,7 +527,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
             <TouchableWithoutFeedback onPress={() => {}}>
               <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{t('registerMood')}</Text>
+              <Text style={styles.modalTitle}>Registrar Humor</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={28} color="#666" />
               </TouchableOpacity>
@@ -547,7 +563,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
               {/* Seletor de Humor */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('howIs')} {selectedPet?.name}?</Text>
+                <Text style={styles.sectionTitle}>Como está {selectedPet?.name}?</Text>
                 <View style={styles.moodGrid}>
                   {MOODS.map(mood => (
                     <TouchableOpacity
@@ -557,8 +573,13 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                         dynamicStyles.moodButton,
                         selectedMood === mood.type && styles.moodButtonSelected,
                         selectedMood === mood.type && { borderColor: mood.color },
+                        { minWidth: TOUCH_TARGET.MIN_SIZE, minHeight: TOUCH_TARGET.MIN_SIZE }
                       ]}
                       onPress={() => setSelectedMood(mood.type)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Selecionar humor ${mood.label.toLowerCase()}`}
+                      accessibilityHint={`Define o humor atual como ${mood.label.toLowerCase()}`}
+                      accessibilityState={{ selected: selectedMood === mood.type }}
                     >
                       <Text style={styles.moodEmoji}>
                         {mood.type === 'feliz' ? '😊' : mood.type === 'calmo' ? '😌' : mood.type === 'ansioso' ? '😰' : mood.type === 'triste' ? '😢' : mood.type === 'irritado' ? '😠' : '⚡'}
@@ -571,10 +592,10 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
               {/* Campo de Anotações */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('notes')} ({t('optional')})</Text>
+                <Text style={styles.sectionTitle}>Observações (Opcional)</Text>
                 <TextInput
                   style={styles.notesInput}
-                  placeholder={t('notesPlaceholder')}
+                  placeholder="Adicione observações sobre o humor do seu pet..."
                   value={notes}
                   onChangeText={setNotes}
                   multiline
@@ -591,9 +612,9 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
               {/* Sintomas */}
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t('symptoms')} ({t('optional')})</Text>
+                <Text style={styles.sectionTitle}>Sintomas (Opcional)</Text>
                 
-                <Text style={styles.categoryTitle}>{t('physical')}</Text>
+                <Text style={styles.categoryTitle}>Físicos</Text>
                 <View style={styles.symptomsGrid}>
                   {AVAILABLE_SYMPTOMS.filter(s => s.category === 'fisico').map(symptom => (
                     <TouchableOpacity
@@ -614,7 +635,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                   ))}
                 </View>
 
-                <Text style={styles.categoryTitle}>{t('behavioral')}</Text>
+                <Text style={styles.categoryTitle}>Comportamentais</Text>
                 <View style={styles.symptomsGrid}>
                   {AVAILABLE_SYMPTOMS.filter(s => s.category === 'comportamental').map(symptom => (
                     <TouchableOpacity
@@ -642,7 +663,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
               onPress={handleSaveMood}
               disabled={!selectedMood}
             >
-              <Text style={styles.saveButtonText}>{t('saveRecord')}</Text>
+              <Text style={styles.saveButtonText}>Salvar Registro</Text>
             </TouchableOpacity>
               </View>
             </TouchableWithoutFeedback>
@@ -661,7 +682,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                📊 {t('summaryOf')} {selectedPet?.name}
+                📊 Resumo de {selectedPet?.name}
               </Text>
               <TouchableOpacity onPress={() => setSummaryModalVisible(false)}>
                 <Ionicons name="close" size={28} color="#666" />
@@ -680,7 +701,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                       <View style={styles.statusHeader}>
                         <Text style={styles.statusEmoji}>{summary.statusEmoji}</Text>
                         <View style={{ flex: 1 }}>
-                          <Text style={styles.statusTitle}>{t('generalStatus')}</Text>
+                          <Text style={styles.statusTitle}>Status Geral</Text>
                           <Text style={[styles.statusValue, { color: summary.statusColor }]}>
                             {summary.status}
                           </Text>
@@ -691,7 +712,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                         </View>
                       </View>
                       <Text style={styles.statusDescription}>
-                        {t('daysAverage', { count: summary.totalDays })}
+                        Média de {summary.totalDays} dias
                       </Text>
                     </View>
 
@@ -699,7 +720,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                     <View style={styles.summarySection}>
                       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                         <Ionicons name="calendar" size={20} color="#6C63FF" />
-                        <Text style={styles.summarySectionTitle}>{t('monthlySummary')}</Text>
+                        <Text style={styles.summarySectionTitle}>Resumo Mensal</Text>
                       </View>
                       <View style={styles.moodGrid}>
                         {MOODS.map(mood => {
@@ -716,7 +737,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                                 </Text>
                               </View>
                               <Text style={styles.moodGridLabel}>{mood.label}</Text>
-                              <Text style={styles.moodGridCount}>{count} {count === 1 ? t('day') : t('days')}</Text>
+                              <Text style={styles.moodGridCount}>{count} {count === 1 ? 'dia' : 'dias'}</Text>
                               <Text style={styles.moodGridPercentage}>{percentage}%</Text>
                             </View>
                           );
@@ -726,7 +747,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
                     {/* Comparação com Mês Anterior */}
                     <View style={styles.summarySection}>
-                      <Text style={styles.summarySectionTitle}>🔄 {t('comparison')}</Text>
+                      <Text style={styles.summarySectionTitle}>🔄 Comparação</Text>
                       {(() => {
                         const currentPositive = analysis.currentMonth.feliz + analysis.currentMonth.calmo + analysis.currentMonth.energetico;
                         const previousPositive = analysis.previousMonth.feliz + analysis.previousMonth.calmo + analysis.previousMonth.energetico;
@@ -740,15 +761,15 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                           <View style={styles.comparisonCard}>
                             <View style={styles.comparisonRow}>
                               <View style={styles.comparisonItem}>
-                                <Text style={styles.comparisonLabel}>{t('currentMonth')}</Text>
-                                <Text style={styles.comparisonPositive}>↑ {currentPositive} {currentPositive === 1 ? t('day') : t('days')} {t('positive')}</Text>
-                                <Text style={styles.comparisonNegative}>↓ {currentNegative} {currentNegative === 1 ? t('day') : t('days')} {t('negative')}</Text>
+                                <Text style={styles.comparisonLabel}>Mês Atual</Text>
+                                <Text style={styles.comparisonPositive}>↑ {currentPositive} {currentPositive === 1 ? 'dia' : 'dias'} positivos</Text>
+                                <Text style={styles.comparisonNegative}>↓ {currentNegative} {currentNegative === 1 ? 'dia' : 'dias'} negativos</Text>
                               </View>
                               <View style={styles.comparisonDivider} />
                               <View style={styles.comparisonItem}>
-                                <Text style={styles.comparisonLabel}>{t('previousMonth')}</Text>
-                                <Text style={styles.comparisonPositive}>↑ {previousPositive} {previousPositive === 1 ? t('day') : t('days')} {t('positive')}</Text>
-                                <Text style={styles.comparisonNegative}>↓ {previousNegative} {previousNegative === 1 ? t('day') : t('days')} {t('negative')}</Text>
+                                <Text style={styles.comparisonLabel}>Mês Anterior</Text>
+                                <Text style={styles.comparisonPositive}>↑ {previousPositive} {previousPositive === 1 ? 'dia' : 'dias'} positivos</Text>
+                                <Text style={styles.comparisonNegative}>↓ {previousNegative} {previousNegative === 1 ? 'dia' : 'dias'} negativos</Text>
                               </View>
                             </View>
                             <View style={[
@@ -757,9 +778,9 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                               trend === 'piorando' && styles.trendBadgeNegative,
                             ]}>
                               <Text style={styles.trendText}>
-                                {trend === 'melhorando' ? `📈 ${t('improving')}` : 
-                                 trend === 'piorando' ? `📉 ${t('needsAttention')}` : 
-                                 `🔷 ${t('stable')}`}
+                                {trend === 'melhorando' ? '📈 Melhorando' : 
+                                 trend === 'piorando' ? '📉 Precisa de Atenção' : 
+                                 '🔷 Estável'}
                               </Text>
                             </View>
                           </View>
@@ -770,7 +791,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                     {/* Sintomas Frequentes */}
                     {analysis.commonSymptoms.length > 0 && (
                       <View style={styles.summarySection}>
-                        <Text style={styles.summarySectionTitle}>🌡️ {t('frequentSymptoms')}</Text>
+                        <Text style={styles.summarySectionTitle}>🌡️ Sintomas Frequentes</Text>
                         {analysis.commonSymptoms.map((symptom, index) => (
                           <View key={index} style={styles.symptomBadge}>
                             <Text style={styles.symptomBadgeText}>• {symptom}</Text>
@@ -781,16 +802,16 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
 
                     {/* Recomendações */}
                     <View style={styles.summarySection}>
-                      <Text style={styles.summarySectionTitle}>💡 {t('recommendations')}</Text>
+                      <Text style={styles.summarySectionTitle}>💡 Recomendações</Text>
                       <View style={styles.recommendationCard}>
                         <Text style={styles.recommendationText}>
                           {parseFloat(summary.averageScore) >= 8 
-                            ? `✅ ${t('recommendation1')}`
+                            ? '✅ Seu pet está muito bem! Continue com os cuidados atuais'
                             : parseFloat(summary.averageScore) >= 6.5
-                            ? `👍 ${t('recommendation2')}`
+                            ? '👍 Seu pet está bem, mas observe possíveis mudanças'
                             : parseFloat(summary.averageScore) >= 5
-                            ? `⚠️ ${t('recommendation3')}`
-                            : `🚨 ${t('recommendation4')}`}
+                            ? '⚠️ Fique atento ao humor do seu pet e considere consulta veterinária'
+                            : '🚨 Procure um veterinário para avaliar a saúde do seu pet'}
                         </Text>
                       </View>
                     </View>
@@ -808,7 +829,7 @@ export function MoodTracker({ pets, onMoodUpdated, initialPetIndex }: MoodTracke
                           color={generatingPDF ? "#999" : "#fff"} 
                         />
                         <Text style={[styles.pdfButtonText, generatingPDF && styles.pdfButtonTextDisabled]}>
-                          {generatingPDF ? t('generatingPDF') : t('generatePDF')}
+                          {generatingPDF ? 'Gerando PDF...' : 'Gerar Relatório PDF'}
                         </Text>
                       </TouchableOpacity>
                     </View>
@@ -1023,6 +1044,36 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_600SemiBold',
     color: '#5A4E7A',
   },
+  scoreExplanation: {
+    backgroundColor: '#F0EDFF',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 12,
+  },
+  scoreExplanationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  scoreExplanationTitle: {
+    fontSize: 13,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#5A4E7A',
+  },
+  scoreExplanationText: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#5A4E7A',
+    lineHeight: 18,
+  },
+  scoreDisclaimer: {
+    fontSize: 11,
+    fontFamily: 'Quicksand_600SemiBold',
+    color: '#8B7AB8',
+    marginTop: 6,
+    lineHeight: 16,
+  },
   modernChart: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -1198,47 +1249,6 @@ const styles = StyleSheet.create({
   moodIconEmoji: {
     fontSize: 20,
   },
-  healthScoreInfo: {
-    backgroundColor: '#F0EDFF',
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 8,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderLeftWidth: 3,
-    borderLeftColor: '#B8A4E8',
-  },
-  infoIcon: {
-    marginRight: 8,
-    marginTop: 2,
-  },
-  infoTextContainer: {
-    flex: 1,
-    gap: 8,
-  },
-  infoTitle: {
-    fontSize: 13,
-    fontFamily: 'Quicksand_700Bold',
-    color: '#5A4E7A',
-    marginBottom: 4,
-  },
-  infoText: {
-    fontSize: 12,
-    fontFamily: 'Quicksand_500Medium',
-    color: '#5A4E7A',
-    lineHeight: 18,
-  },
-  infoBold: {
-    fontFamily: 'Quicksand_700Bold',
-    color: '#5A4E7A',
-  },
-  infoDisclaimer: {
-    fontSize: 11,
-    fontFamily: 'Quicksand_600SemiBold',
-    color: '#8B7AB8',
-    lineHeight: 16,
-    marginTop: 4,
-  },
   alertBadge: {
     backgroundColor: '#E8F5E9',
     borderRadius: 12,
@@ -1355,6 +1365,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: 'transparent',
+    minWidth: TOUCH_TARGET.MIN_SIZE,
+    minHeight: TOUCH_TARGET.MIN_SIZE,
   },
   moodButtonSelected: {
     backgroundColor: '#fff',

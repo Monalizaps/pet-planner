@@ -7,26 +7,44 @@ import {
   Switch,
   Alert,
   Platform,
+  Linking,
 } from 'react-native';
 import { Text } from '../components/StyledText';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import { testNotification, checkExactAlarmPermission, debugScheduledNotifications } from '../utils/notifications';
-import { useTranslation } from 'react-i18next';
+
 import SwipeBackHandler from '../components/SwipeBackHandler';
 
-export default function NotificationsSettings() {
-  const { t } = useTranslation();
+export default function NotificationSettings() {
   const router = useRouter();
   const [taskReminders, setTaskReminders] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [vibrationEnabled, setVibrationEnabled] = useState(true);
+  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
   useEffect(() => {
     loadSettings();
+    checkPermissionStatus();
   }, []);
+
+  // Verificar permissões quando a tela ganhar foco
+  useFocusEffect(
+    React.useCallback(() => {
+      checkPermissionStatus();
+    }, [])
+  );
+
+  const checkPermissionStatus = async () => {
+    try {
+      const { status } = await Notifications.getPermissionsAsync();
+      setPermissionStatus(status);
+    } catch (error) {
+      console.error('Erro ao verificar permissões:', error);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -36,6 +54,7 @@ export default function NotificationsSettings() {
         setTaskReminders(parsed.taskReminders ?? true);
         setSoundEnabled(parsed.soundEnabled ?? true);
         setVibrationEnabled(parsed.vibrationEnabled ?? true);
+        setNotificationsEnabled(parsed.notificationsEnabled ?? true);
       }
     } catch (error) {
       console.error('Error loading notification settings:', error);
@@ -71,6 +90,7 @@ export default function NotificationsSettings() {
       taskReminders,
       soundEnabled,
       vibrationEnabled,
+      notificationsEnabled,
       [key]: value,
     };
 
@@ -84,18 +104,105 @@ export default function NotificationsSettings() {
       case 'vibrationEnabled':
         setVibrationEnabled(value);
         break;
+      case 'notificationsEnabled':
+        toggleNotifications(value);
+        return; // Não chama saveSettings pois toggleNotifications já faz isso
     }
 
     saveSettings(settings);
   };
 
   const requestPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
+    try {
+      // Primeiro, tentar solicitar permissões
+      const { status } = await Notifications.requestPermissionsAsync();
+      setPermissionStatus(status);
+      
+      if (status === 'granted') {
+        Alert.alert(
+          'Permissão Concedida! 🎉',
+          'Agora você receberá notificações sobre as tarefas dos seus pets.',
+          [{ text: 'Perfeito!' }]
+        );
+      } else {
+        // Se negada, oferecer abrir configurações
+        Alert.alert(
+          'Permissão Necessária',
+          'Para receber lembretes sobre seus pets, é necessário permitir notificações. Deseja abrir as configurações?',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { 
+              text: 'Abrir Configurações', 
+              onPress: () => openAppSettings(),
+              style: 'default'
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Erro ao solicitar permissões:', error);
       Alert.alert(
-        'Permissão Negada',
-        'Para receber notificações, você precisa permitir nas configurações do dispositivo.',
-        [{ text: 'OK' }]
+        'Erro',
+        'Não foi possível verificar as permissões. Tente abrir as configurações manualmente.',
+        [
+          { text: 'OK' },
+          { text: 'Abrir Configurações', onPress: () => openAppSettings() }
+        ]
+      );
+    }
+  };
+
+  
+  const toggleNotifications = async (enabled: boolean) => {
+    try {
+      setNotificationsEnabled(enabled);
+      
+      const settings = {
+        taskReminders,
+        soundEnabled,
+        vibrationEnabled,
+        notificationsEnabled: enabled,
+      };
+      
+      await AsyncStorage.setItem('notification_settings', JSON.stringify(settings));
+      
+      if (!enabled) {
+        // Cancelar todas as notificações agendadas
+        await Notifications.cancelAllScheduledNotificationsAsync();
+        Alert.alert(
+          'Notificações Desativadas',
+          'Todas as notificações foram canceladas. Você pode reativar a qualquer momento.',
+          [{ text: 'OK' }]
+        );
+      } else {
+        Alert.alert(
+          'Notificações Ativadas',
+          'As notificações foram reativadas. Novos lembretes serão agendados.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Erro ao alterar notificações:', error);
+      Alert.alert('Erro', 'Não foi possível alterar as configurações de notificação.');
+    }
+  };
+
+  const openAppSettings = async () => {
+    try {
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else if (Platform.OS === 'android') {
+        await Linking.openURL('android-app-settings:');
+      } else {
+        // Para outros sistemas, tentar abrir configurações gerais
+        await Linking.openURL('settings:');
+      }
+    } catch (error) {
+      console.error('Erro ao abrir configurações:', error);
+      Alert.alert(
+        'Erro',
+        'Não foi possível abrir as configurações automaticamente. Acesse manualmente: Configurações > Notificações > Pet Planner',
+        [{ text: 'Entendi' }]
       );
     }
   };
@@ -107,7 +214,7 @@ export default function NotificationsSettings() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>🔔 {t('notifications')}</Text>
+        <Text style={styles.headerTitle}>🔔 Notificações</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -117,102 +224,123 @@ export default function NotificationsSettings() {
         contentContainerStyle={{ paddingBottom: 40 }}
       >
         {/* Permission Banner */}
-        <TouchableOpacity style={styles.permissionBanner} onPress={requestPermissions}>
-          <Ionicons name="notifications-outline" size={24} color="#6C63FF" />
+        <TouchableOpacity style={[
+          styles.permissionBanner,
+          permissionStatus === 'granted' && styles.permissionBannerGranted
+        ]} onPress={requestPermissions}>
+          <Ionicons 
+            name={permissionStatus === 'granted' ? "checkmark-circle" : "notifications-outline"} 
+            size={24} 
+            color={permissionStatus === 'granted' ? "#4CAF50" : "#6C63FF"} 
+          />
           <View style={{ flex: 1, marginLeft: 12 }}>
-            <Text style={styles.permissionTitle}>{t('allowNotifications')}</Text>
+            <Text style={styles.permissionTitle}>
+              {permissionStatus === 'granted' ? 'Notificações Ativadas' : 'Permitir Notificações'}
+            </Text>
             <Text style={styles.permissionText}>
-              Toque para verificar permissões
+              {permissionStatus === 'granted' 
+                ? 'Você receberá lembretes sobre seus pets'
+                : 'Toque para ativar notificações'
+              }
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#6C63FF" />
+          <Ionicons 
+            name={permissionStatus === 'granted' ? "checkmark" : "chevron-forward"} 
+            size={20} 
+            color={permissionStatus === 'granted' ? "#4CAF50" : "#6C63FF"} 
+          />
         </TouchableOpacity>
 
-        {/* Test Notification Button */}
-        <TouchableOpacity 
-          style={styles.testButton}
-          onPress={async () => {
-            await testNotification();
-            if (Platform.OS === 'android' && Platform.Version >= 31) {
-              await checkExactAlarmPermission();
-            }
-          }}
-        >
-          <Ionicons name="flask-outline" size={22} color="#fff" />
-          <Text style={styles.testButtonText}>Testar Notificação</Text>
-        </TouchableOpacity>
-
-        {/* Botão debug da fila */}
-        <TouchableOpacity 
-          style={[styles.testButton, { backgroundColor: '#444', marginTop: 12 }]}
-          onPress={async () => {
-            await debugScheduledNotifications();
-          }}
-        >
-          <Ionicons name="list-outline" size={22} color="#fff" />
-          <Text style={styles.testButtonText}>Ver Fila</Text>
-        </TouchableOpacity>
-
-        {/* Reminder Types */}
+        {/* Master Toggle */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('reminderTypes')}</Text>
+          <Text style={styles.sectionTitle}>Controle Geral</Text>
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <Ionicons name="clipboard-outline" size={22} color="#6C63FF" />
+              <Ionicons 
+                name={notificationsEnabled ? "notifications" : "notifications-off"} 
+                size={22} 
+                color={notificationsEnabled ? "#6C63FF" : "#FF6B6B"} 
+              />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>{t('taskReminders')}</Text>
-                <Text style={styles.settingDescription}>
-                  {t('receiveNotificationsAboutTasks')}
+                <Text style={styles.settingTitle}>Notificações do App</Text>
+                <Text style={styles.settingSubtitle}>
+                  {notificationsEnabled ? 'Ativas - você receberá lembretes' : 'Desativadas - nenhum lembrete será enviado'}
                 </Text>
               </View>
             </View>
             <Switch
-              value={taskReminders}
+              value={notificationsEnabled}
+              onValueChange={(value) => handleToggle('notificationsEnabled', value)}
+              trackColor={{ false: '#FFE8E8', true: '#B8B3FF' }}
+              thumbColor={notificationsEnabled ? '#6C63FF' : '#FF6B6B'}
+            />
+          </View>
+        </View>
+
+        {/* Reminder Types */}
+        <View style={[styles.section, !notificationsEnabled && styles.disabledSection]}>
+          <Text style={[styles.sectionTitle, !notificationsEnabled && styles.disabledText]}>Tipos de Lembrete</Text>
+
+          <View style={[styles.settingItem, !notificationsEnabled && styles.disabledItem]}>
+            <View style={styles.settingLeft}>
+              <Ionicons name="clipboard-outline" size={22} color={!notificationsEnabled ? "#CCC" : "#6C63FF"} />
+              <View style={styles.settingInfo}>
+                <Text style={[styles.settingTitle, !notificationsEnabled && styles.disabledText]}>Lembretes de Tarefas</Text>
+                <Text style={[styles.settingSubtitle, !notificationsEnabled && styles.disabledText]}>
+                  Receber notificações sobre tarefas
+                </Text>
+              </View>
+            </View>
+            <Switch
+              value={taskReminders && notificationsEnabled}
               onValueChange={(value) => handleToggle('taskReminders', value)}
+              disabled={!notificationsEnabled}
               trackColor={{ false: '#E8E6FF', true: '#B8B3FF' }}
-              thumbColor={taskReminders ? '#6C63FF' : '#f4f3f4'}
+              thumbColor={taskReminders && notificationsEnabled ? '#6C63FF' : '#f4f3f4'}
             />
           </View>
         </View>
 
         {/* Sound & Vibration */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('soundAndVibration')}</Text>
+        <View style={[styles.section, !notificationsEnabled && styles.disabledSection]}>
+          <Text style={[styles.sectionTitle, !notificationsEnabled && styles.disabledText]}>Som e Vibração</Text>
 
-          <View style={styles.settingItem}>
+          <View style={[styles.settingItem, !notificationsEnabled && styles.disabledItem]}>
             <View style={styles.settingLeft}>
-              <Ionicons name="volume-high-outline" size={22} color="#6C63FF" />
+              <Ionicons name="volume-high-outline" size={22} color={!notificationsEnabled ? "#CCC" : "#6C63FF"} />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>{t('sound')}</Text>
-                <Text style={styles.settingDescription}>
-                  {t('playSoundOnNotifications')}
+                <Text style={[styles.settingTitle, !notificationsEnabled && styles.disabledText]}>Som</Text>
+                <Text style={[styles.settingSubtitle, !notificationsEnabled && styles.disabledText]}>
+                  Reproduzir som nas notificações
                 </Text>
               </View>
             </View>
             <Switch
-              value={soundEnabled}
+              value={soundEnabled && notificationsEnabled}
               onValueChange={(value) => handleToggle('soundEnabled', value)}
+              disabled={!notificationsEnabled}
               trackColor={{ false: '#E8E6FF', true: '#B8B3FF' }}
-              thumbColor={soundEnabled ? '#6C63FF' : '#f4f3f4'}
+              thumbColor={soundEnabled && notificationsEnabled ? '#6C63FF' : '#f4f3f4'}
             />
           </View>
 
-          <View style={styles.settingItem}>
+          <View style={[styles.settingItem, !notificationsEnabled && styles.disabledItem]}>
             <View style={styles.settingLeft}>
-              <Ionicons name="phone-portrait-outline" size={22} color="#6C63FF" />
+              <Ionicons name="phone-portrait-outline" size={22} color={!notificationsEnabled ? "#CCC" : "#6C63FF"} />
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>{t('vibration')}</Text>
-                <Text style={styles.settingDescription}>
-                  {t('vibrateOnNotification')}
+                <Text style={[styles.settingTitle, !notificationsEnabled && styles.disabledText]}>Vibração</Text>
+                <Text style={[styles.settingSubtitle, !notificationsEnabled && styles.disabledText]}>
+                  Vibrar ao receber notificação
                 </Text>
               </View>
             </View>
             <Switch
-              value={vibrationEnabled}
+              value={vibrationEnabled && notificationsEnabled}
               onValueChange={(value) => handleToggle('vibrationEnabled', value)}
+              disabled={!notificationsEnabled}
               trackColor={{ false: '#E8E6FF', true: '#B8B3FF' }}
-              thumbColor={vibrationEnabled ? '#6C63FF' : '#f4f3f4'}
+              thumbColor={vibrationEnabled && notificationsEnabled ? '#6C63FF' : '#f4f3f4'}
             />
           </View>
         </View>
@@ -274,6 +402,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E8E6FF',
   },
+  permissionBannerGranted: {
+    backgroundColor: '#E8F5E9',
+    borderColor: '#C8E6C9',
+  },
   permissionTitle: {
     fontSize: 16,
     fontFamily: 'Quicksand_600SemiBold',
@@ -322,6 +454,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_600SemiBold',
     color: '#333',
   },
+  settingSubtitle: {
+    fontSize: 13,
+    fontFamily: 'Quicksand_400Regular',
+    color: '#666',
+    marginTop: 2,
+  },
   settingDescription: {
     fontSize: 13,
     fontFamily: 'Quicksand_400Regular',
@@ -342,24 +480,13 @@ const styles = StyleSheet.create({
     color: '#2D5016',
     lineHeight: 20,
   },
-  testButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#6C63FF',
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 8,
-    gap: 8,
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+  disabledSection: {
+    opacity: 0.5,
   },
-  testButtonText: {
-    fontSize: 16,
-    fontFamily: 'Quicksand_600SemiBold',
-    color: '#fff',
+  disabledItem: {
+    backgroundColor: '#F8F8F8',
+  },
+  disabledText: {
+    color: '#999',
   },
 });

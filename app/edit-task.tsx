@@ -18,11 +18,9 @@ import { scheduleTaskNotification, cancelTaskNotification } from './utils/notifi
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function EditTask() {
-  const { t } = useTranslation();
   const router = useRouter();
   const { taskId } = useLocalSearchParams<{ taskId: string }>();
 
@@ -156,10 +154,10 @@ export default function EditTask() {
   };
 
   const recurringOptions = [
-    { value: undefined, label: t('onceOnly'), icon: '📅' },
-    { value: 'daily', label: t('daily'), icon: '🔄' },
-    { value: 'weekly', label: t('weekly'), icon: '📆' },
-    { value: 'monthly', label: t('monthly'), icon: '🗟️' },
+    { value: undefined, label: 'Apenas uma vez', icon: '📅' },
+    { value: 'daily', label: 'Diário', icon: '🔄' },
+    { value: 'weekly', label: 'Semanal', icon: '📆' },
+    { value: 'monthly', label: 'Mensal', icon: '🗟️' },
   ] as const;
 
   if (!task) {
@@ -183,34 +181,34 @@ export default function EditTask() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>✏️ {t('editTask')}</Text>
+        <Text style={styles.title}>✏️ Editar Tarefa</Text>
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
           <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.label}>{t('title')}</Text>
+        <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
           value={title}
           onChangeText={setTitle}
-          placeholder={t('titlePlaceholder')}
+          placeholder="Ex: Dar remédio, Passear, Vacinação..."
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>{t('descriptionOptional')}</Text>
+        <Text style={styles.label}>Descrição (Opcional)</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={description}
           onChangeText={setDescription}
-          placeholder={t('taskDetailsPlaceholder')}
+          placeholder="Detalhes adicionais sobre a tarefa..."
           placeholderTextColor="#999"
           multiline
           numberOfLines={3}
         />
 
-        <Text style={styles.label}>{t('date')}</Text>
+        <Text style={styles.label}>Data</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -234,7 +232,7 @@ export default function EditTask() {
           />
         )}
 
-        <Text style={styles.label}>{t('time')}</Text>
+        <Text style={styles.label}>Horário</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowTimePicker(true)}
@@ -246,7 +244,7 @@ export default function EditTask() {
                   hour: '2-digit',
                   minute: '2-digit',
                 })
-              : t('selectTime')}
+              : 'Selecionar horário'}
           </Text>
         </TouchableOpacity>
 
@@ -260,7 +258,7 @@ export default function EditTask() {
           />
         )}
 
-        <Text style={styles.label}>{t('recurrence')}</Text>
+        <Text style={styles.label}>Recorrência</Text>
         <View style={styles.recurringContainer}>
           {recurringOptions.map((option) => (
             <TouchableOpacity
@@ -285,7 +283,7 @@ export default function EditTask() {
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>{t('saveChanges')}</Text>
+          <Text style={styles.saveButtonText}>Salvar Alterações</Text>
         </TouchableOpacity>
         <View style={{ height: 40 }} />
       </View>

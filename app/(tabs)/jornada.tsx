@@ -21,15 +21,12 @@ import { getPets, getTasks, saveTask, deleteTask } from '../services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { scheduleTaskNotification } from '../utils/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useTranslation } from 'react-i18next';
-import i18n from 'i18next';
 
 const { width } = Dimensions.get('window');
 
 // Configurar calendário será feito dentro do componente
 
 export default function Jornada() {
-  const { t } = useTranslation();
   const router = useRouter();
   const [pets, setPets] = useState<Pet[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -40,7 +37,7 @@ export default function Jornada() {
   const currentMonthString = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-01`;
   const [currentMonth, setCurrentMonth] = useState(currentMonthString);
   
-  // Configurar calendário com traduções
+  // Configurar calendário
   React.useEffect(() => {
     LocaleConfig.locales['pt-br'] = {
       monthNames: [
@@ -48,13 +45,13 @@ export default function Jornada() {
         'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
       ],
       monthNamesShort: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-      dayNames: [t('sunday'), t('monday'), t('tuesday'), t('wednesday'), t('thursday'), t('friday'), t('saturday')],
+      dayNames: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
       dayNamesShort: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
-      today: t('today') || 'Hoje',
+      today: 'Hoje',
     };
     LocaleConfig.defaultLocale = 'pt-br';
-  }, [t]);
-  
+  }, []);
+
   // Modals
   const [showFeedingModal, setShowFeedingModal] = useState(false);
   const [showMedicationModal, setShowMedicationModal] = useState(false);
@@ -609,7 +606,7 @@ export default function Jornada() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <CalendarIcon size={28} color="#fff" />
-          <Text style={styles.headerTitle}>{t('routine')}</Text>
+          <Text style={styles.headerTitle}>Rotina</Text>
         </View>
         <Image
           source={require('../../assets/pets1.png')}
@@ -631,7 +628,7 @@ export default function Jornada() {
       >
         {/* Atalhos Rápidos */}
         <View style={styles.quickActions}>
-          <Text style={styles.quickActionsTitle}>⚡ {t('quickShortcuts')}</Text>
+          <Text style={styles.quickActionsTitle}>⚡ Atalhos Rápidos</Text>
           <View style={styles.quickActionsRow}>
             <TouchableOpacity
               style={[styles.quickActionCard, { backgroundColor: '#FFF4E6' }]}
@@ -639,10 +636,10 @@ export default function Jornada() {
             >
               <Ionicons name="restaurant" size={28} color="#FF9500" />
               <Text style={[styles.quickActionTitle, { color: '#FF9500' }]}>
-                {t('feeding')}
+                Alimentação
               </Text>
               <Text style={styles.quickActionSubtitle}>
-                {t('scheduleHours')}
+                Agendar horários
               </Text>
             </TouchableOpacity>
 
@@ -652,10 +649,10 @@ export default function Jornada() {
             >
               <Ionicons name="medical" size={28} color="#FF6B9D" />
               <Text style={[styles.quickActionTitle, { color: '#FF6B9D' }]}>
-                {t('medication')}
+                Medicação
               </Text>
               <Text style={styles.quickActionSubtitle}>
-                {t('createReminders')}
+                Criar lembretes
               </Text>
             </TouchableOpacity>
           </View>
@@ -727,8 +724,8 @@ export default function Jornada() {
           <View style={styles.tasksSection}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <Text style={styles.sectionTitle}>
-                {t('tasksFor')} {new Date(selectedDate + 'T12:00:00').toLocaleDateString(
-                  i18n.language === 'pt' ? 'pt-BR' : i18n.language === 'en' ? 'en-US' : 'fr-FR', 
+                Tarefas para {new Date(selectedDate + 'T12:00:00').toLocaleDateString(
+                  'pt-BR', 
                   {
                     day: '2-digit',
                     month: 'long',
@@ -949,7 +946,7 @@ export default function Jornada() {
 
         {/* Todas as tarefas pendentes */}
         <View style={styles.allTasksSection}>
-          <Text style={styles.sectionTitle}>📋 {t('allTasks')}</Text>
+          <Text style={styles.sectionTitle}>📋 Todas as Tarefas</Text>
           {tasks.filter(t => new Date(t.dateTime) >= new Date()).length === 0 ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyText}>📝 Nenhuma tarefa agendada</Text>
@@ -1123,7 +1120,7 @@ export default function Jornada() {
           >
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>🍽️ {t('scheduleFeeding')}</Text>
+                <Text style={styles.modalTitle}>🍽️ Agendar Alimentação</Text>
                 <TouchableOpacity onPress={() => setShowFeedingModal(false)}>
                   <Ionicons name="close" size={28} color="#666" />
                 </TouchableOpacity>
@@ -1133,7 +1130,7 @@ export default function Jornada() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 20 }}
               >
-                <Text style={styles.modalLabel}>{t('feedingType')}</Text>
+                <Text style={styles.modalLabel}>Tipo de Alimentação</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={feedingType}
@@ -1142,7 +1139,7 @@ export default function Jornada() {
                   placeholderTextColor="#999"
                 />
 
-                <Text style={styles.modalLabel}>{t('selectPet')}</Text>
+                <Text style={styles.modalLabel}>Selecionar Pet</Text>
                 {pets.length === 0 ? (
                   <View style={styles.noPetsContainer}>
                     <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
@@ -1236,7 +1233,7 @@ export default function Jornada() {
           >
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>💊 {t('scheduleMedication')}</Text>
+                <Text style={styles.modalTitle}>💊 Agendar Medicação</Text>
                 <TouchableOpacity onPress={() => setShowMedicationModal(false)}>
                   <Ionicons name="close" size={28} color="#666" />
                 </TouchableOpacity>
@@ -1246,7 +1243,7 @@ export default function Jornada() {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 20 }}
               >
-                <Text style={styles.modalLabel}>{t('medicationName')}</Text>
+                <Text style={styles.modalLabel}>Nome da Medicação</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={medicationName}
@@ -1264,7 +1261,7 @@ export default function Jornada() {
                   placeholderTextColor="#999"
                 />
 
-                <Text style={styles.modalLabel}>{t('selectPet')}</Text>
+                <Text style={styles.modalLabel}>Selecionar Pet</Text>
                 {pets.length === 0 ? (
                   <View style={styles.noPetsContainer}>
                     <Text style={styles.noPetsText}>Nenhum pet cadastrado</Text>
@@ -1335,7 +1332,7 @@ export default function Jornada() {
                   {medicationInterval ? `${Math.floor(24 / parseInt(medicationInterval))} doses por dia` : ''}
                 </Text>
 
-                <Text style={styles.modalLabel}>{t('howManyDays')}</Text>
+                <Text style={styles.modalLabel}>Quantos dias?</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={medicationDays}
@@ -1351,7 +1348,7 @@ export default function Jornada() {
                 </Text>
 
                 <TouchableOpacity style={styles.modalButton} onPress={createMedicationTasks}>
-                  <Text style={styles.modalButtonText}>{t('addToCalendar')}</Text>
+                  <Text style={styles.modalButtonText}>Adicionar ao Calendário</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -1370,7 +1367,7 @@ export default function Jornada() {
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>➕ {t('newTask')}</Text>
+                <Text style={styles.modalTitle}>➕ Nova Tarefa</Text>
                 <TouchableOpacity onPress={() => setShowQuickTaskModal(false)}>
                   <Ionicons name="close" size={28} color="#999" />
                 </TouchableOpacity>
@@ -1378,17 +1375,17 @@ export default function Jornada() {
 
               <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Tipo de Tarefa */}
-                <Text style={styles.modalLabel}>{t('taskType')}</Text>
+                <Text style={styles.modalLabel}>Tipo de Tarefa</Text>
                 <ScrollView 
                   horizontal 
                   showsHorizontalScrollIndicator={false}
                   style={{ marginBottom: 16 }}
                 >
                   {[
-                    { type: 'medication' as const, icon: '💊', label: t('medication') },
-                    { type: 'feeding' as const, icon: '🍽️', label: t('meal') },
-                    { type: 'consultation' as const, icon: '🏥', label: t('consultation') },
-                    { type: 'grooming' as const, icon: '✂️', label: t('groomingBath') },
+                    { type: 'medication' as const, icon: '💊', label: 'Medicação' },
+                    { type: 'feeding' as const, icon: '🍽️', label: 'Refeição' },
+                    { type: 'consultation' as const, icon: '🏥', label: 'Consulta' },
+                    { type: 'grooming' as const, icon: '✂️', label: 'Banho/Tosa' },
                     { type: 'exercise' as const, icon: '🏃', label: 'Exercício' },
                     { type: 'other' as const, icon: '📝', label: 'Outro' },
                   ].map((item) => (
@@ -1412,7 +1409,7 @@ export default function Jornada() {
                 </ScrollView>
 
                 {/* Selecionar Pet */}
-                <Text style={styles.modalLabel}>{t('selectPet')}</Text>
+                <Text style={styles.modalLabel}>Selecionar Pet</Text>
                 {pets.length === 0 ? (
                   <View style={styles.noPetsContainer}>
                     <Text style={styles.noPetsText}>Você ainda não cadastrou nenhum pet</Text>

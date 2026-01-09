@@ -20,11 +20,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { v4 as uuidv4 } from 'uuid';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function AddPet() {
-  const { t } = useTranslation();
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState<'dog' | 'cat' | 'bird' | 'other'>('dog');
@@ -57,7 +55,7 @@ export default function AddPet() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      Alert.alert(t('nameRequired'), t('pleaseEnterPetName'));
+      Alert.alert('Nome obrigatório', 'Por favor, insira o nome do pet');
       return;
     }
 
@@ -107,7 +105,7 @@ export default function AddPet() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.title}>🐾 {t('addPet')}</Text>
+        <Text style={styles.title}>🐾 Adicionar Pet</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -118,17 +116,17 @@ export default function AddPet() {
           ) : (
             <View style={styles.imagePlaceholder}>
               <Ionicons name="camera" size={40} color="#6C63FF" />
-              <Text style={styles.imagePlaceholderText}>{t('addPhoto')}</Text>
+              <Text style={styles.imagePlaceholderText}>Adicionar Foto</Text>
             </View>
           )}
         </TouchableOpacity>
 
-        <Text style={styles.label}>{t('petName')}</Text>
+        <Text style={styles.label}>Nome do Pet</Text>
         <TextInput
           style={styles.input}
           value={name}
           onChangeText={setName}
-          placeholder={t('petNamePlaceholder')}
+          placeholder="Digite o nome do seu pet"
           placeholderTextColor="#999"
         />
 
@@ -156,16 +154,16 @@ export default function AddPet() {
           ))}
         </View>
 
-        <Text style={styles.label}>{t('breed')}</Text>
+        <Text style={styles.label}>Raça</Text>
         <TextInput
           style={styles.input}
           value={breed}
           onChangeText={setBreed}
-          placeholder={t('breedPlaceholder')}
+          placeholder="Ex: Golden Retriever, Siames, etc."
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>{t('birthDate')}</Text>
+        <Text style={styles.label}>Data de Nascimento</Text>
         <TouchableOpacity
           style={styles.dateButton}
           onPress={() => setShowDatePicker(true)}
@@ -196,30 +194,30 @@ export default function AddPet() {
           />
         )}
 
-        <Text style={styles.label}>{t('weight')}</Text>
+        <Text style={styles.label}>Peso (kg)</Text>
         <TextInput
           style={styles.input}
           value={weight}
           onChangeText={setWeight}
-          placeholder={t('weightPlaceholder')}
+          placeholder="Ex: 25.5"
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>{t('color')}</Text>
+        <Text style={styles.label}>Cor</Text>
         <TextInput
           style={styles.input}
           value={color}
           onChangeText={setColor}
-          placeholder={t('colorPlaceholder')}
+          placeholder="Ex: Marrom, Branco, Preto"
           placeholderTextColor="#999"
         />
 
-        <Text style={styles.label}>{t('notes')}</Text>
+        <Text style={styles.label}>Observações</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={notes}
           onChangeText={setNotes}
-          placeholder={t('notesPlaceholder')}
+          placeholder="Informações adicionais sobre o pet..."
           placeholderTextColor="#999"
           multiline
           numberOfLines={4}
@@ -227,7 +225,7 @@ export default function AddPet() {
         />
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>{t('savePet')}</Text>
+          <Text style={styles.saveButtonText}>Salvar Pet</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />

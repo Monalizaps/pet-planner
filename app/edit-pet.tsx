@@ -17,11 +17,9 @@ import { getPets, savePet } from './services/storage';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './theme/colors';
 import { ResponsiveContainer } from './components/ResponsiveContainer';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from './components/SwipeBackHandler';
 
 export default function EditPet() {
-  const { t } = useTranslation();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   

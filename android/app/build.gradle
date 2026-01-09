@@ -63,6 +63,20 @@ react {
     autolinkLibrariesWithApp()
 }
 
+// Configure Java Toolchain for Java 21
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+// Configure Kotlin compiler options for Java 21
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+}
+
 /**
  * Set this to true in release builds to optimize the app using [R8](https://developer.android.com/topic/performance/app-optimization/enable-app-optimization).
  */
@@ -88,6 +102,17 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace 'com.miautolembrete.app'
+    
+    // Configure Java 21 compatibility
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_21
+        targetCompatibility JavaVersion.VERSION_21
+    }
+    
+    kotlinOptions {
+        jvmTarget = '21'
+    }
+    
     defaultConfig {
         applicationId 'com.miautolembrete.app'
         minSdkVersion rootProject.ext.minSdkVersion

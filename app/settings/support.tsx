@@ -10,11 +10,9 @@ import {
 import { Text } from '../components/StyledText';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
 import SwipeBackHandler from '../components/SwipeBackHandler';
 
 export default function SupportSettings() {
-  const { t } = useTranslation();
   const router = useRouter();
 
   const handleContact = (method: string) => {
@@ -33,24 +31,24 @@ export default function SupportSettings() {
 
   const faqItems = [
     {
-      question: t('faq1Question'),
-      answer: t('faq1Answer'),
+      question: 'Como adicionar um novo pet?',
+      answer: 'Toque no botão "+" na tela principal e preencha as informações do seu pet.',
     },
     {
-      question: t('faq2Question'),
-      answer: t('faq2Answer'),
+      question: 'Como configurar lembretes de tarefas?',
+      answer: 'Vá em Configurações > Notificações e ative os lembretes de tarefas.',
     },
     {
-      question: t('faq3Question'),
-      answer: t('faq3Answer'),
+      question: 'Como visualizar o histórico do humor?',
+      answer: 'Na aba "Mais", toque em "Histórico de Humor" para ver a evolução.',
     },
     {
-      question: t('faq4Question'),
-      answer: t('faq4Answer'),
+      question: 'Os dados ficam salvos no meu celular?',
+      answer: 'Sim, todos os dados são armazenados localmente no seu dispositivo.',
     },
     {
-      question: t('faq5Question'),
-      answer: t('faq5Answer'),
+      question: 'Como exportar relatórios?',
+      answer: 'No histórico de humor, use o botão de exportar para gerar um PDF.',
     },
   ];
 
@@ -61,7 +59,7 @@ export default function SupportSettings() {
         <TouchableOpacity onPress={() => router.push('/(tabs)/mais')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>💬 {t('help')}</Text>
+        <Text style={styles.headerTitle}>💬 Ajuda</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -72,7 +70,7 @@ export default function SupportSettings() {
       >
         {/* Contact Options */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('contactUs')}</Text>
+          <Text style={styles.sectionTitle}>Entre em Contato</Text>
 
           <TouchableOpacity 
             style={styles.contactCard}
@@ -110,8 +108,8 @@ export default function SupportSettings() {
               <Ionicons name="help-circle" size={24} color="#FF9800" />
             </View>
             <View style={styles.contactInfo}>
-              <Text style={styles.contactTitle}>{t('helpCenter')}</Text>
-              <Text style={styles.contactText}>{t('frequentQuestionsText')}</Text>
+              <Text style={styles.contactTitle}>Central de Ajuda</Text>
+              <Text style={styles.contactText}>Perguntas frequentes</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#999" />
           </TouchableOpacity>
@@ -119,7 +117,7 @@ export default function SupportSettings() {
 
         {/* FAQ */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('frequentQuestions')}</Text>
+          <Text style={styles.sectionTitle}>Perguntas Frequentes</Text>
 
           {faqItems.map((item, index) => (
             <View key={index} style={styles.faqCard}>
@@ -138,9 +136,10 @@ export default function SupportSettings() {
         <View style={styles.infoBox}>
           <Ionicons name="time-outline" size={24} color="#6C63FF" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.infoTitle}>{t('businessHours')}</Text>
+            <Text style={styles.infoTitle}>Horário de Atendimento</Text>
             <Text style={styles.infoText}>
-              {t('businessHoursText')}
+              Segunda a Sexta: 9h às 18h
+              Sábado: 9h às 12h
             </Text>
           </View>
         </View>

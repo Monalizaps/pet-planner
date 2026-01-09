@@ -6,13 +6,15 @@ import {
   StyleSheet,
   useWindowDimensions,
   Modal,
+  Alert,
 } from 'react-native';
 import { Text } from './components/StyledText';
 import { MoodIcon, CalendarIcon } from './components/PetIcons';
 import { MoodTracker } from './components/MoodTracker';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Pet, MoodEntry, MoodType } from './types';
-import { getPets } from './services/storage';
+import { getPets, analyzeMood } from './services/storage';
+import { generateMoodPDF } from './services/pdfGenerator';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMoodData } from './hooks/useMoodData';
@@ -37,6 +39,7 @@ export default function MoodHistory() {
   const [selectedView, setSelectedView] = useState<ViewType>('pie');
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [generatingPDF, setGeneratingPDF] = useState(false);
 
   // Usar hook otimizado para dados de humor
   const { 
@@ -74,6 +77,38 @@ export default function MoodHistory() {
     
     if (petsData.length > 0 && !selectedPet) {
       setSelectedPet(petsData[0]);
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    if (!selectedPet || !moodData || moodData.length === 0) {
+      Alert.alert('Aviso', 'Selecione um pet e certifique-se de que há dados para gerar o relatório.');
+      return;
+    }
+
+    setGeneratingPDF(true);
+    
+    try {
+      // Gerar análise do humor do pet
+      const analysis = await analyzeMood(selectedPet.id);
+      
+      // Função de tradução simples (sem internacionalização)
+      const translate = (key: string) => {
+        const translations: Record<string, string> = {
+          'normal': 'Normal',
+          'atencao': 'Atenção',
+          'critico': 'Cuidado necessário',
+        };
+        return translations[key] || key;
+      };
+
+      await generateMoodPDF(selectedPet, analysis, translate);
+      Alert.alert('Sucesso', 'Relatório PDF gerado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      Alert.alert('Erro', 'Não foi possível gerar o relatório PDF.');
+    } finally {
+      setGeneratingPDF(false);
     }
   };
 
@@ -172,6 +207,50 @@ export default function MoodHistory() {
                 <Text style={styles.barChartCount}>{count}</Text>
               </View>
             ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderPieChart = (entries: MoodEntry[]) => {
+    if (!summary || entries.length === 0) return null;
+
+    const total = summary.total;
+
+    const pieSlices = Object.entries(summary.distribution)
+      .filter(([_, count]) => count > 0)
+      .sort((a, b) => b[1] - a[1])
+      .map(([mood, count]) => {
+        const percentage = (count / total) * 100;
+        return {
+          mood: mood as MoodType,
+          count,
+          percentage,
+          color: moodColors[mood as MoodType]
+        };
+      });
+
+    return (
+      <View style={styles.pieChart}>
+        <Text style={styles.chartTitle}>Distribuição de Humores</Text>
+        <View style={styles.pieChartContainer}>
+          {/* Círculo central com score */}
+          <View style={styles.pieChartCircle}>
+            <Text style={styles.pieChartScore}>{summary.score}</Text>
+            <Text style={styles.pieChartScoreLabel}>Score Médio</Text>
+          </View>
+          
+          {/* Legenda com percentuais */}
+          <View style={styles.pieChartLegend}>
+            {pieSlices.map(slice => (
+              <View key={slice.mood} style={styles.pieChartLegendItem}>
+                <View style={[styles.pieChartLegendColor, { backgroundColor: slice.color }]} />
+                <Text style={styles.pieChartLegendText}>
+                  {moodEmojis[slice.mood]} {slice.mood} {slice.percentage.toFixed(0)}%
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
     );
@@ -289,9 +368,22 @@ export default function MoodHistory() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Histórico de Humor</Text>
-        <TouchableOpacity onPress={() => setCalendarVisible(true)}>
-          <CalendarIcon size={24} color="#6C63FF" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity 
+            onPress={handleGeneratePDF} 
+            style={styles.headerButton}
+            disabled={generatingPDF || !selectedPet || !moodData || moodData.length === 0}
+          >
+            <Ionicons 
+              name={generatingPDF ? "hourglass-outline" : "document-text-outline"} 
+              size={24} 
+              color={generatingPDF || !selectedPet || !moodData || moodData.length === 0 ? "#999" : "#6C63FF"} 
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setCalendarVisible(true)} style={styles.headerButton}>
+            <CalendarIcon size={24} color="#6C63FF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -308,7 +400,10 @@ export default function MoodHistory() {
                 ]}
                 onPress={() => setSelectedPet(pet)}
               >
-                <Text style={styles.petOptionText}>{pet.name}</Text>
+                <Text style={[
+                  styles.petOptionText,
+                  selectedPet?.id === pet.id && styles.petOptionTextActive
+                ]}>{pet.name}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -406,11 +501,23 @@ export default function MoodHistory() {
           </View>
         )}
 
+        {/* Informação sobre PDF */}
+        {selectedPet && moodData && moodData.length > 0 && (
+          <View style={styles.pdfInfo}>
+            <Ionicons name="information-circle" size={16} color="#6C63FF" />
+            <Text style={styles.pdfInfoText}>
+              Toque no ícone 📄 no topo para gerar relatório PDF do período selecionado
+            </Text>
+          </View>
+        )}
+
         {/* Visualizações */}
         {selectedPet ? (
           <View style={styles.chartContainer}>
-            {selectedView === 'pie' && (
-              <MoodTracker petId={selectedPet.id} period={selectedPeriod} />
+            {selectedView === 'pie' && (filteredData.length > 0 ? renderPieChart(filteredData) :
+              <View style={styles.emptyChart}>
+                <Text style={styles.emptyText}>Nenhum dado para gráfico de pizza</Text>
+              </View>
             )}
             {selectedView === 'line' && (filteredData.length > 0 ? renderLineChart(filteredData) : 
               <View style={styles.emptyChart}>
@@ -470,6 +577,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand_700Bold',
     color: '#333',
   },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  headerButton: {
+    padding: 8,
+  },
   content: {
     flex: 1,
     padding: 20,
@@ -497,6 +611,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Quicksand_500Medium',
     color: '#666',
+  },
+  petOptionTextActive: {
+    color: '#fff',
   },
   periodSelector: {
     backgroundColor: '#fff',
@@ -598,6 +715,21 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  pdfInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0EDFF',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  pdfInfoText: {
+    fontSize: 13,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#5A4E7A',
+    flex: 1,
   },
   // Line Chart
   lineChart: {
@@ -773,13 +905,81 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     margin: 10,
   },
-    paddingVertical: 60,
-  },
   emptyText: {
     fontSize: 16,
     fontFamily: 'Quicksand_500Medium',
     color: '#666',
     textAlign: 'center',
     marginTop: 16,
+  },
+  // Pie Chart
+  pieChart: {
+    marginBottom: 20,
+  },
+  pieChartContainer: {
+    alignItems: 'center',
+  },
+  pieChartSvg: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  pieChartCircle: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  pieSlice: {
+    position: 'absolute',
+    height: '50%',
+    transformOrigin: '0% 100%',
+    borderTopRightRadius: 160,
+  },
+  pieChartCenter: {
+    position: 'absolute',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+  },
+  pieChartScore: {
+    fontSize: 24,
+    fontFamily: 'Quicksand_700Bold',
+    color: '#333',
+  },
+  pieChartScoreLabel: {
+    fontSize: 12,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#666',
+  },
+  pieChartLegend: {
+    alignItems: 'flex-start',
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  pieChartLegendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    width: '100%',
+  },
+  pieChartLegendColor: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  pieChartLegendText: {
+    fontSize: 16,
+    fontFamily: 'Quicksand_500Medium',
+    color: '#333',
+    textTransform: 'capitalize',
   },
 });
